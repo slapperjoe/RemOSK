@@ -1,0 +1,25 @@
+<Window x:Class="RemOSK.Views.TrackpointWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RemOSK.Views"
+        mc:Ignorable="d"
+        Title="RemOSK Trackpoint" 
+        Height="150" Width="150"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False">
+    <Grid>
+        <Border x:Name="MainBorder" Background="#CC000000" CornerRadius="10" BorderBrush="#55FFFFFF" BorderThickness="1"
+                IsManipulationEnabled="False"
+                ManipulationStarting="MainBorder_ManipulationStarting"
+                ManipulationDelta="MainBorder_ManipulationDelta"
+                ManipulationStarted="MainBorder_ManipulationStarted"
+                ManipulationInertiaStarting="MainBorder_ManipulationInertiaStarting">
+             <ContentControl x:Name="InputContainer" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="5"/>
+        </Border>
+    </Grid>
+</Window>

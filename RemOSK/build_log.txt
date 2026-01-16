@@ -1,0 +1,15 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(20,16): warning CS8618: Non-nullable event 'OnKeyPressed' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the event as nullable. [D:\RemOSK\RemOSK\RemOSK_amagh0ow_wpftmp.csproj]
+D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(20,16): warning CS8618: Non-nullable event 'OnTrackpointMove' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the event as nullable. [D:\RemOSK\RemOSK\RemOSK_amagh0ow_wpftmp.csproj]
+D:\RemOSK\RemOSK\Views\TrackpointWindow.xaml.cs(18,38): error CS0176: Member 'HorizontalAlignment.Center' cannot be accessed with an instance reference; qualify it with a type name instead [D:\RemOSK\RemOSK\RemOSK_amagh0ow_wpftmp.csproj]
+
+Build FAILED.
+
+D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(20,16): warning CS8618: Non-nullable event 'OnKeyPressed' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the event as nullable. [D:\RemOSK\RemOSK\RemOSK_amagh0ow_wpftmp.csproj]
+D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(20,16): warning CS8618: Non-nullable event 'OnTrackpointMove' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the event as nullable. [D:\RemOSK\RemOSK\RemOSK_amagh0ow_wpftmp.csproj]
+D:\RemOSK\RemOSK\Views\TrackpointWindow.xaml.cs(18,38): error CS0176: Member 'HorizontalAlignment.Center' cannot be accessed with an instance reference; qualify it with a type name instead [D:\RemOSK\RemOSK\RemOSK_amagh0ow_wpftmp.csproj]
+    2 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:00.83

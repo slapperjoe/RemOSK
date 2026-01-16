@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+D:\RemOSK\RemOSK\Services\WindowBlurHelper.cs(55,40): error CS0266: Cannot implicitly convert type 'uint' to 'int'. An explicit conversion exists (are you missing a cast?) [D:\RemOSK\RemOSK\RemOSK_hf0tmihx_wpftmp.csproj]
+
+Build FAILED.
+
+D:\RemOSK\RemOSK\Services\WindowBlurHelper.cs(55,40): error CS0266: Cannot implicitly convert type 'uint' to 'int'. An explicit conversion exists (are you missing a cast?) [D:\RemOSK\RemOSK\RemOSK_hf0tmihx_wpftmp.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:00.75

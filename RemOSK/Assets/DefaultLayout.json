@@ -1,0 +1,537 @@
+{
+  "Name": "Default TKL",
+  "LeftKeys": [
+    {
+      "Label": "Esc",
+      "VirtualKeyCode": 27,
+      "Row": 0,
+      "Column": 0
+    },
+    {
+      "Label": "F1",
+      "VirtualKeyCode": 112,
+      "Row": 0,
+      "Column": 2
+    },
+    {
+      "Label": "F2",
+      "VirtualKeyCode": 113,
+      "Row": 0,
+      "Column": 3
+    },
+    {
+      "Label": "F3",
+      "VirtualKeyCode": 114,
+      "Row": 0,
+      "Column": 4
+    },
+    {
+      "Label": "F4",
+      "VirtualKeyCode": 115,
+      "Row": 0,
+      "Column": 5
+    },
+    {
+      "Label": "`",
+      "VirtualKeyCode": 192,
+      "Row": 1,
+      "Column": 0
+    },
+    {
+      "Label": "1",
+      "VirtualKeyCode": 49,
+      "Row": 1,
+      "Column": 1
+    },
+    {
+      "Label": "2",
+      "VirtualKeyCode": 50,
+      "Row": 1,
+      "Column": 2
+    },
+    {
+      "Label": "3",
+      "VirtualKeyCode": 51,
+      "Row": 1,
+      "Column": 3
+    },
+    {
+      "Label": "4",
+      "VirtualKeyCode": 52,
+      "Row": 1,
+      "Column": 4
+    },
+    {
+      "Label": "5",
+      "VirtualKeyCode": 53,
+      "Row": 1,
+      "Column": 5
+    },
+    {
+      "Label": "Tab",
+      "VirtualKeyCode": 9,
+      "Row": 2,
+      "Column": 0,
+      "WidthUnits": 1.5
+    },
+    {
+      "Label": "Q",
+      "VirtualKeyCode": 81,
+      "Row": 2,
+      "Column": 1.5
+    },
+    {
+      "Label": "W",
+      "VirtualKeyCode": 87,
+      "Row": 2,
+      "Column": 2.5
+    },
+    {
+      "Label": "E",
+      "VirtualKeyCode": 69,
+      "Row": 2,
+      "Column": 3.5
+    },
+    {
+      "Label": "R",
+      "VirtualKeyCode": 82,
+      "Row": 2,
+      "Column": 4.5
+    },
+    {
+      "Label": "T",
+      "VirtualKeyCode": 84,
+      "Row": 2,
+      "Column": 5.5
+    },
+    {
+      "Label": "Caps",
+      "VirtualKeyCode": 20,
+      "Row": 3,
+      "Column": 0,
+      "WidthUnits": 1.75
+    },
+    {
+      "Label": "A",
+      "VirtualKeyCode": 65,
+      "Row": 3,
+      "Column": 1.75
+    },
+    {
+      "Label": "S",
+      "VirtualKeyCode": 83,
+      "Row": 3,
+      "Column": 2.75
+    },
+    {
+      "Label": "D",
+      "VirtualKeyCode": 68,
+      "Row": 3,
+      "Column": 3.75
+    },
+    {
+      "Label": "F",
+      "VirtualKeyCode": 70,
+      "Row": 3,
+      "Column": 4.75
+    },
+    {
+      "Label": "G",
+      "VirtualKeyCode": 71,
+      "Row": 3,
+      "Column": 5.75
+    },
+    {
+      "Label": "Shift",
+      "VirtualKeyCode": 160,
+      "Row": 4,
+      "Column": 0,
+      "WidthUnits": 2.25
+    },
+    {
+      "Label": "Z",
+      "VirtualKeyCode": 90,
+      "Row": 4,
+      "Column": 2.25
+    },
+    {
+      "Label": "X",
+      "VirtualKeyCode": 88,
+      "Row": 4,
+      "Column": 3.25
+    },
+    {
+      "Label": "C",
+      "VirtualKeyCode": 67,
+      "Row": 4,
+      "Column": 4.25
+    },
+    {
+      "Label": "V",
+      "VirtualKeyCode": 86,
+      "Row": 4,
+      "Column": 5.25
+    },
+    {
+      "Label": "B",
+      "VirtualKeyCode": 66,
+      "Row": 4,
+      "Column": 6.25
+    },
+    {
+      "Label": "Ctrl",
+      "VirtualKeyCode": 162,
+      "Row": 5,
+      "Column": 0,
+      "WidthUnits": 1.25
+    },
+    {
+      "Label": "Win",
+      "VirtualKeyCode": 91,
+      "Row": 5,
+      "Column": 1.25,
+      "WidthUnits": 1.25
+    },
+    {
+      "Label": "Alt",
+      "VirtualKeyCode": 164,
+      "Row": 5,
+      "Column": 2.5,
+      "WidthUnits": 1.25
+    }
+  ],
+  "RightKeys": [
+    {
+      "Label": "F5",
+      "VirtualKeyCode": 116,
+      "Row": 0,
+      "Column": 0
+    },
+    {
+      "Label": "F6",
+      "VirtualKeyCode": 117,
+      "Row": 0,
+      "Column": 1
+    },
+    {
+      "Label": "F7",
+      "VirtualKeyCode": 118,
+      "Row": 0,
+      "Column": 2
+    },
+    {
+      "Label": "F8",
+      "VirtualKeyCode": 119,
+      "Row": 0,
+      "Column": 3
+    },
+    {
+      "Label": "F9",
+      "VirtualKeyCode": 120,
+      "Row": 0,
+      "Column": 4.5
+    },
+    {
+      "Label": "F10",
+      "VirtualKeyCode": 121,
+      "Row": 0,
+      "Column": 5.5
+    },
+    {
+      "Label": "F11",
+      "VirtualKeyCode": 122,
+      "Row": 0,
+      "Column": 6.5
+    },
+    {
+      "Label": "F12",
+      "VirtualKeyCode": 123,
+      "Row": 0,
+      "Column": 7.5
+    },
+    {
+      "Label": "PrtSc",
+      "VirtualKeyCode": 44,
+      "Row": 0,
+      "Column": 9
+    },
+    {
+      "Label": "ScrLk",
+      "VirtualKeyCode": 145,
+      "Row": 0,
+      "Column": 10
+    },
+    {
+      "Label": "Pause",
+      "VirtualKeyCode": 19,
+      "Row": 0,
+      "Column": 11
+    },
+    {
+      "Label": "6",
+      "VirtualKeyCode": 54,
+      "Row": 1,
+      "Column": 0
+    },
+    {
+      "Label": "7",
+      "VirtualKeyCode": 55,
+      "Row": 1,
+      "Column": 1
+    },
+    {
+      "Label": "8",
+      "VirtualKeyCode": 56,
+      "Row": 1,
+      "Column": 2
+    },
+    {
+      "Label": "9",
+      "VirtualKeyCode": 57,
+      "Row": 1,
+      "Column": 3
+    },
+    {
+      "Label": "0",
+      "VirtualKeyCode": 48,
+      "Row": 1,
+      "Column": 4
+    },
+    {
+      "Label": "-",
+      "VirtualKeyCode": 189,
+      "Row": 1,
+      "Column": 5
+    },
+    {
+      "Label": "=",
+      "VirtualKeyCode": 187,
+      "Row": 1,
+      "Column": 6
+    },
+    {
+      "Label": "Back",
+      "VirtualKeyCode": 8,
+      "Row": 1,
+      "Column": 7,
+      "WidthUnits": 2.0
+    },
+    {
+      "Label": "Ins",
+      "VirtualKeyCode": 45,
+      "Row": 1,
+      "Column": 9
+    },
+    {
+      "Label": "Home",
+      "VirtualKeyCode": 36,
+      "Row": 1,
+      "Column": 10
+    },
+    {
+      "Label": "PgUp",
+      "VirtualKeyCode": 33,
+      "Row": 1,
+      "Column": 11
+    },
+    {
+      "Label": "Y",
+      "VirtualKeyCode": 89,
+      "Row": 2,
+      "Column": 0
+    },
+    {
+      "Label": "U",
+      "VirtualKeyCode": 85,
+      "Row": 2,
+      "Column": 1
+    },
+    {
+      "Label": "I",
+      "VirtualKeyCode": 73,
+      "Row": 2,
+      "Column": 2
+    },
+    {
+      "Label": "O",
+      "VirtualKeyCode": 79,
+      "Row": 2,
+      "Column": 3
+    },
+    {
+      "Label": "P",
+      "VirtualKeyCode": 80,
+      "Row": 2,
+      "Column": 4
+    },
+    {
+      "Label": "[",
+      "VirtualKeyCode": 219,
+      "Row": 2,
+      "Column": 5
+    },
+    {
+      "Label": "]",
+      "VirtualKeyCode": 221,
+      "Row": 2,
+      "Column": 6
+    },
+    {
+      "Label": "\\",
+      "VirtualKeyCode": 220,
+      "Row": 2,
+      "Column": 7,
+      "WidthUnits": 1.5
+    },
+    {
+      "Label": "Del",
+      "VirtualKeyCode": 46,
+      "Row": 2,
+      "Column": 9
+    },
+    {
+      "Label": "End",
+      "VirtualKeyCode": 35,
+      "Row": 2,
+      "Column": 10
+    },
+    {
+      "Label": "PgDn",
+      "VirtualKeyCode": 34,
+      "Row": 2,
+      "Column": 11
+    },
+    {
+      "Label": "H",
+      "VirtualKeyCode": 72,
+      "Row": 3,
+      "Column": 0.25
+    },
+    {
+      "Label": "J",
+      "VirtualKeyCode": 74,
+      "Row": 3,
+      "Column": 1.25
+    },
+    {
+      "Label": "K",
+      "VirtualKeyCode": 75,
+      "Row": 3,
+      "Column": 2.25
+    },
+    {
+      "Label": "L",
+      "VirtualKeyCode": 76,
+      "Row": 3,
+      "Column": 3.25
+    },
+    {
+      "Label": ";",
+      "VirtualKeyCode": 186,
+      "Row": 3,
+      "Column": 4.25
+    },
+    {
+      "Label": "'",
+      "VirtualKeyCode": 222,
+      "Row": 3,
+      "Column": 5.25
+    },
+    {
+      "Label": "Enter",
+      "VirtualKeyCode": 13,
+      "Row": 3,
+      "Column": 6.25,
+      "WidthUnits": 2.25
+    },
+    {
+      "Label": "N",
+      "VirtualKeyCode": 78,
+      "Row": 4,
+      "Column": 0.75
+    },
+    {
+      "Label": "M",
+      "VirtualKeyCode": 77,
+      "Row": 4,
+      "Column": 1.75
+    },
+    {
+      "Label": ",",
+      "VirtualKeyCode": 188,
+      "Row": 4,
+      "Column": 2.75
+    },
+    {
+      "Label": ".",
+      "VirtualKeyCode": 190,
+      "Row": 4,
+      "Column": 3.75
+    },
+    {
+      "Label": "/",
+      "VirtualKeyCode": 191,
+      "Row": 4,
+      "Column": 4.75
+    },
+    {
+      "Label": "Shift",
+      "VirtualKeyCode": 161,
+      "Row": 4,
+      "Column": 5.75,
+      "WidthUnits": 2.75
+    },
+    {
+      "Label": "Up",
+      "VirtualKeyCode": 38,
+      "Row": 4,
+      "Column": 10
+    },
+    {
+      "Label": "Space",
+      "VirtualKeyCode": 32,
+      "Row": 5,
+      "Column": 0,
+      "WidthUnits": 4.0
+    },
+    {
+      "Label": "Alt",
+      "VirtualKeyCode": 165,
+      "Row": 5,
+      "Column": 4,
+      "WidthUnits": 1.25
+    },
+    {
+      "Label": "Fn",
+      "VirtualKeyCode": 255,
+      "Row": 5,
+      "Column": 5.25,
+      "WidthUnits": 1.25
+    },
+    {
+      "Label": "Ctrl",
+      "VirtualKeyCode": 163,
+      "Row": 5,
+      "Column": 6.5,
+      "WidthUnits": 1.25
+    },
+    {
+      "Label": "Left",
+      "VirtualKeyCode": 37,
+      "Row": 5,
+      "Column": 9
+    },
+    {
+      "Label": "Down",
+      "VirtualKeyCode": 40,
+      "Row": 5,
+      "Column": 10
+    },
+    {
+      "Label": "Right",
+      "VirtualKeyCode": 39,
+      "Row": 5,
+      "Column": 11
+    }
+  ]
+}
