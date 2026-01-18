@@ -10,6 +10,12 @@ namespace RemOSK.Models
         public double Row { get; set; }
         public double Column { get; set; }
         public double WidthUnits { get; set; } = 1.0; 
+        
+        // Advanced Positioning
+        public double Rotation { get; set; } = 0; // Degrees
+        public double X { get; set; } = -1; // -1 means use Grid (Column)
+        public double Y { get; set; } = -1; // -1 means use Grid (Row)
+        
         public bool IsHalfSplit { get; set; } // If true, belongs to Right half? Or we define separate arrays?
     }
 

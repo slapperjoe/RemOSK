@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using RemOSK.Views;
 using System.Windows.Media.Animation;
@@ -94,6 +95,7 @@ using RemOSK.Models;
              
              if (layoutName == "75%") fileName = "Layout75.json";
              else if (layoutName == "60%") fileName = "Layout60.json";
+             else if (layoutName.StartsWith("Alice")) fileName = "AliceLayout.json";
              else fileName = "DefaultLayout.json";
             
             var layoutPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", fileName);
@@ -519,6 +521,11 @@ using RemOSK.Models;
                     };
                     
                     newWin.OnMove += Window_OnTrackpointMove;
+                    
+                    // Transparency Logic
+                    newWin.OnInteractionStart += (s, e) => SetKeyboardTransparency(0.2);
+                    newWin.OnInteractionEnd += (s, e) => SetKeyboardTransparency(1.0);
+                    
                     newWin.OnLeftClick += (s, e) => _inputInjector.SendLeftClick();
                     newWin.OnRightClick += (s, e) => _inputInjector.SendRightClick();
                     
@@ -617,6 +624,9 @@ using RemOSK.Models;
                 return;
             }
             
+            // Manually flash since we removed auto-flash to support wake-up logic
+            e.Flash();
+            
             Console.WriteLine($"[Manager] Key Pressed: {e.Label} (VK: {e.VirtualKeyCode})");
             // Use Modifier Manager to handle key
             _modifierManager.HandleKey(e.VirtualKeyCode, true);
@@ -712,6 +722,15 @@ using RemOSK.Models;
                 (_trackpointWindow as TrackpointWindow)?.DisableClickThrough();
                 (_clickButtonsWindow as ClickButtonsWindow)?.DisableClickThrough();
             }
+        }
+
+        
+        public void SetKeyboardTransparency(double opacity)
+        {
+            if (_isFadedOut) return; // Don't override fade-out
+            
+            _leftWindow?.Dispatcher.Invoke(() => _leftWindow.Opacity = opacity);
+            _rightWindow?.Dispatcher.Invoke(() => _rightWindow.Opacity = opacity);
         }
     }
 }

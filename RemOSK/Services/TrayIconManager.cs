@@ -165,9 +165,25 @@ namespace RemOSK.Services
 
             // Layouts Submenu
             var layoutMenu = new ToolStripMenuItem("Layouts");
-            layoutMenu.DropDownItems.Add("TKL", null, (s,e) => SwitchLayout("TKL"));
-            layoutMenu.DropDownItems.Add("75%", null, (s,e) => SwitchLayout("75%"));
-            layoutMenu.DropDownItems.Add("60%", null, (s,e) => SwitchLayout("60%"));
+            var layoutNames = new[] { "TKL", "75%", "60%", "Alice" };
+            
+            foreach (var layout in layoutNames)
+            {
+                var item = new ToolStripMenuItem(layout, null, (s, e) => SwitchLayout(layout));
+                item.Name = layout; // Tag for finding it later
+                // Initial check
+                item.Checked = _configService.CurrentConfig.LastUsedLayout == layout;
+                layoutMenu.DropDownItems.Add(item);
+            }
+            
+            // Store reference to update checks later
+            layoutMenu.DropDownOpening += (s, e) =>
+            {
+                foreach (ToolStripMenuItem item in layoutMenu.DropDownItems)
+                {
+                   item.Checked = _configService.CurrentConfig.LastUsedLayout == item.Name;
+                }
+            };
             
             contextMenu.Items.Add(layoutMenu);
             contextMenu.Items.Add("-");

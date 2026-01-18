@@ -1,0 +1,40 @@
+<UserControl x:Class="RemOSK.Controls.KeyButton"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             Height="50" Width="50">
+    <UserControl.Resources>
+        <Storyboard x:Key="FlashAnimation">
+            <ColorAnimation Storyboard.TargetName="MainButton" 
+                            Storyboard.TargetProperty="(Button.Background).(SolidColorBrush.Color)"
+                            From="#FFFFFFFF" To="#CC333333" Duration="0:0:0.3"
+                            FillBehavior="Stop"/>
+        </Storyboard>
+    </UserControl.Resources>
+
+    <Button x:Name="MainButton" Command="{Binding Command}" Click="Button_Click" Background="#CC333333" BorderBrush="#AA999999" BorderThickness="1" Foreground="White">
+        <TextBlock x:Name="KeyLabelText" Text="A" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" FontWeight="Bold"/>
+        
+        <Button.Resources>
+            <Style TargetType="Button">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                             <ControlTemplate.Triggers>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Background" Value="White"/>
+                                    <Setter Property="Foreground" Value="Black"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Button.Resources>
+    </Button>
+</UserControl>

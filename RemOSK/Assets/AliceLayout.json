@@ -1,0 +1,197 @@
+{
+    "Name": "Alice (Combined)",
+    "LeftKeys": [
+        {
+            "Label": "Q",
+            "VirtualKeyCode": 81,
+            "Column": 0,
+            "Row": 0
+        },
+        {
+            "Label": "W",
+            "VirtualKeyCode": 87,
+            "Column": 1,
+            "Row": 0
+        },
+        {
+            "Label": "E",
+            "VirtualKeyCode": 69,
+            "Column": 2,
+            "Row": 0
+        },
+        {
+            "Label": "R",
+            "VirtualKeyCode": 82,
+            "Column": 3,
+            "Row": 0
+        },
+        {
+            "Label": "T",
+            "VirtualKeyCode": 84,
+            "Column": 4,
+            "Row": 0,
+            "Rotation": 5,
+            "X": 230,
+            "Y": 15
+        },
+        {
+            "Label": "A",
+            "VirtualKeyCode": 65,
+            "Column": 0,
+            "Row": 1
+        },
+        {
+            "Label": "S",
+            "VirtualKeyCode": 83,
+            "Column": 1,
+            "Row": 1
+        },
+        {
+            "Label": "D",
+            "VirtualKeyCode": 68,
+            "Column": 2,
+            "Row": 1
+        },
+        {
+            "Label": "F",
+            "VirtualKeyCode": 70,
+            "Column": 3,
+            "Row": 1
+        },
+        {
+            "Label": "G",
+            "VirtualKeyCode": 71,
+            "Column": 4,
+            "Row": 1,
+            "Rotation": 5,
+            "X": 235,
+            "Y": 70
+        },
+        {
+            "Label": "Z",
+            "VirtualKeyCode": 90,
+            "Column": 0,
+            "Row": 2
+        },
+        {
+            "Label": "X",
+            "VirtualKeyCode": 88,
+            "Column": 1,
+            "Row": 2
+        },
+        {
+            "Label": "C",
+            "VirtualKeyCode": 67,
+            "Column": 2,
+            "Row": 2
+        },
+        {
+            "Label": "V",
+            "VirtualKeyCode": 86,
+            "Column": 3,
+            "Row": 2
+        },
+        {
+            "Label": "B",
+            "VirtualKeyCode": 66,
+            "Column": 4,
+            "Row": 2,
+            "Rotation": 5,
+            "X": 240,
+            "Y": 125
+        }
+    ],
+    "RightKeys": [
+        {
+            "Label": "Y",
+            "VirtualKeyCode": 89,
+            "Column": 0,
+            "Row": 0,
+            "Rotation": -5,
+            "X": 10,
+            "Y": 15
+        },
+        {
+            "Label": "U",
+            "VirtualKeyCode": 85,
+            "Column": 1,
+            "Row": 0,
+            "X": 70,
+            "Y": 10
+        },
+        {
+            "Label": "I",
+            "VirtualKeyCode": 73,
+            "Column": 2,
+            "Row": 0,
+            "X": 125,
+            "Y": 10
+        },
+        {
+            "Label": "O",
+            "VirtualKeyCode": 79,
+            "Column": 3,
+            "Row": 0,
+            "X": 180,
+            "Y": 10
+        },
+        {
+            "Label": "P",
+            "VirtualKeyCode": 80,
+            "Column": 4,
+            "Row": 0,
+            "X": 235,
+            "Y": 10
+        },
+        {
+            "Label": "H",
+            "VirtualKeyCode": 72,
+            "Column": 0,
+            "Row": 1,
+            "Rotation": -5,
+            "X": 15,
+            "Y": 70
+        },
+        {
+            "Label": "J",
+            "VirtualKeyCode": 74,
+            "Column": 1,
+            "Row": 1,
+            "X": 75,
+            "Y": 65
+        },
+        {
+            "Label": "K",
+            "VirtualKeyCode": 75,
+            "Column": 2,
+            "Row": 1,
+            "X": 130,
+            "Y": 65
+        },
+        {
+            "Label": "L",
+            "VirtualKeyCode": 76,
+            "Column": 3,
+            "Row": 1,
+            "X": 185,
+            "Y": 65
+        },
+        {
+            "Label": "N",
+            "VirtualKeyCode": 78,
+            "Column": 0,
+            "Row": 2,
+            "Rotation": -5,
+            "X": 20,
+            "Y": 125
+        },
+        {
+            "Label": "M",
+            "VirtualKeyCode": 77,
+            "Column": 1,
+            "Row": 2,
+            "X": 80,
+            "Y": 120
+        }
+    ]
+}

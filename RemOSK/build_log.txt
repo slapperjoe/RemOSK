@@ -1,25 +1,23 @@
   Determining projects to restore...
   All projects are up-to-date for restore.
-D:\RemOSK\RemOSK\Views\TrackpointWindow.xaml.cs(160,37): error CS0104: 'Point' is an ambiguous reference between 'System.Drawing.Point' and 'System.Windows.Point' [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
-D:\RemOSK\RemOSK\Views\TrackpointWindow.xaml.cs(161,37): error CS0104: 'Point' is an ambiguous reference between 'System.Drawing.Point' and 'System.Windows.Point' [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
-D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(173,37): error CS0104: 'Point' is an ambiguous reference between 'System.Drawing.Point' and 'System.Windows.Point' [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
-D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(174,37): error CS0104: 'Point' is an ambiguous reference between 'System.Drawing.Point' and 'System.Windows.Point' [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
-D:\RemOSK\RemOSK\Controls\TrackpointControl.xaml.cs(168,36): warning CS0067: The event 'TrackpointControl.OnLeftClick' is never used [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
-D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(16,36): warning CS0067: The event 'KeyboardWindow.RequestExitEditMode' is never used [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
-D:\RemOSK\RemOSK\Controls\TrackpointControl.xaml.cs(169,36): warning CS0067: The event 'TrackpointControl.OnRightClick' is never used [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
-D:\RemOSK\RemOSK\Views\ClickButtonsWindow.xaml.cs(20,22): warning CS0414: The field 'ClickButtonsWindow._isHolding' is assigned but its value is never used [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
+D:\RemOSK\RemOSK\Services\KeyboardWindowManager.cs(54,62): error CS0246: The type or namespace name 'EventArgs' could not be found (are you missing a using directive or an assembly reference?) [D:\RemOSK\RemOSK\RemOSK_uhwa4iud_wpftmp.csproj]
+D:\RemOSK\RemOSK\Services\KeyboardWindowManager.cs(160,31): error CS0246: The type or namespace name 'IntPtr' could not be found (are you missing a using directive or an assembly reference?) [D:\RemOSK\RemOSK\RemOSK_uhwa4iud_wpftmp.csproj]
+D:\RemOSK\RemOSK\Services\KeyboardWindowManager.cs(163,56): error CS0246: The type or namespace name 'IntPtr' could not be found (are you missing a using directive or an assembly reference?) [D:\RemOSK\RemOSK\RemOSK_uhwa4iud_wpftmp.csproj]
+D:\RemOSK\RemOSK\Services\KeyboardWindowManager.cs(166,49): error CS0246: The type or namespace name 'IntPtr' could not be found (are you missing a using directive or an assembly reference?) [D:\RemOSK\RemOSK\RemOSK_uhwa4iud_wpftmp.csproj]
+D:\RemOSK\RemOSK\Services\KeyboardWindowManager.cs(168,46): error CS0246: The type or namespace name 'IntPtr' could not be found (are you missing a using directive or an assembly reference?) [D:\RemOSK\RemOSK\RemOSK_uhwa4iud_wpftmp.csproj]
+D:\RemOSK\RemOSK\Services\KeyboardWindowManager.cs(651,59): error CS0246: The type or namespace name 'EventArgs' could not be found (are you missing a using directive or an assembly reference?) [D:\RemOSK\RemOSK\RemOSK_uhwa4iud_wpftmp.csproj]
+D:\RemOSK\RemOSK\Services\KeyboardWindowManager.cs(29,17): error CS0246: The type or namespace name 'IntPtr' could not be found (are you missing a using directive or an assembly reference?) [D:\RemOSK\RemOSK\RemOSK_uhwa4iud_wpftmp.csproj]
 
 Build FAILED.
 
-D:\RemOSK\RemOSK\Controls\TrackpointControl.xaml.cs(168,36): warning CS0067: The event 'TrackpointControl.OnLeftClick' is never used [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
-D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(16,36): warning CS0067: The event 'KeyboardWindow.RequestExitEditMode' is never used [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
-D:\RemOSK\RemOSK\Controls\TrackpointControl.xaml.cs(169,36): warning CS0067: The event 'TrackpointControl.OnRightClick' is never used [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
-D:\RemOSK\RemOSK\Views\ClickButtonsWindow.xaml.cs(20,22): warning CS0414: The field 'ClickButtonsWindow._isHolding' is assigned but its value is never used [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
-D:\RemOSK\RemOSK\Views\TrackpointWindow.xaml.cs(160,37): error CS0104: 'Point' is an ambiguous reference between 'System.Drawing.Point' and 'System.Windows.Point' [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
-D:\RemOSK\RemOSK\Views\TrackpointWindow.xaml.cs(161,37): error CS0104: 'Point' is an ambiguous reference between 'System.Drawing.Point' and 'System.Windows.Point' [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
-D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(173,37): error CS0104: 'Point' is an ambiguous reference between 'System.Drawing.Point' and 'System.Windows.Point' [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
-D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(174,37): error CS0104: 'Point' is an ambiguous reference between 'System.Drawing.Point' and 'System.Windows.Point' [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
-    4 Warning(s)
-    4 Error(s)
+D:\RemOSK\RemOSK\Services\KeyboardWindowManager.cs(54,62): error CS0246: The type or namespace name 'EventArgs' could not be found (are you missing a using directive or an assembly reference?) [D:\RemOSK\RemOSK\RemOSK_uhwa4iud_wpftmp.csproj]
+D:\RemOSK\RemOSK\Services\KeyboardWindowManager.cs(160,31): error CS0246: The type or namespace name 'IntPtr' could not be found (are you missing a using directive or an assembly reference?) [D:\RemOSK\RemOSK\RemOSK_uhwa4iud_wpftmp.csproj]
+D:\RemOSK\RemOSK\Services\KeyboardWindowManager.cs(163,56): error CS0246: The type or namespace name 'IntPtr' could not be found (are you missing a using directive or an assembly reference?) [D:\RemOSK\RemOSK\RemOSK_uhwa4iud_wpftmp.csproj]
+D:\RemOSK\RemOSK\Services\KeyboardWindowManager.cs(166,49): error CS0246: The type or namespace name 'IntPtr' could not be found (are you missing a using directive or an assembly reference?) [D:\RemOSK\RemOSK\RemOSK_uhwa4iud_wpftmp.csproj]
+D:\RemOSK\RemOSK\Services\KeyboardWindowManager.cs(168,46): error CS0246: The type or namespace name 'IntPtr' could not be found (are you missing a using directive or an assembly reference?) [D:\RemOSK\RemOSK\RemOSK_uhwa4iud_wpftmp.csproj]
+D:\RemOSK\RemOSK\Services\KeyboardWindowManager.cs(651,59): error CS0246: The type or namespace name 'EventArgs' could not be found (are you missing a using directive or an assembly reference?) [D:\RemOSK\RemOSK\RemOSK_uhwa4iud_wpftmp.csproj]
+D:\RemOSK\RemOSK\Services\KeyboardWindowManager.cs(29,17): error CS0246: The type or namespace name 'IntPtr' could not be found (are you missing a using directive or an assembly reference?) [D:\RemOSK\RemOSK\RemOSK_uhwa4iud_wpftmp.csproj]
+    0 Warning(s)
+    7 Error(s)
 
-Time Elapsed 00:00:00.93
+Time Elapsed 00:00:00.75
