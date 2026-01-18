@@ -177,6 +177,7 @@ using RemOSK.Models;
         public void Show()
         {
             Console.WriteLine("[FOCUS DIAG] >>> Show() ENTRY");
+            RegisterActivity(); // Reset inactivity timer and restore opacity immediately
             if (_leftWindow == null)
             {
                 _leftWindow = new KeyboardWindow();
