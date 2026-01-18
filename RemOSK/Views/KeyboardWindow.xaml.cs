@@ -4,21 +4,54 @@ using System.Windows;
 using System.Windows.Controls;
 using RemOSK.Controls;
 using RemOSK.Models;
-
 using RemOSK.Services;
 
 namespace RemOSK.Views
 {
-    public partial class KeyboardWindow : Window, IModifierObserver
+    public partial class KeyboardWindow : DraggableWindow, IModifierObserver
     {
         public event EventHandler<KeyButton>? OnKeyPressed;
         public event EventHandler<Vector>? OnTrackpointMove;
-        public event EventHandler? RequestExitEditMode; // New Event
         
         // Dictionary to track keys by virtual key code for quick updates
         private Dictionary<int, KeyButton> _keyMap = new Dictionary<int, KeyButton>();
 
+        // Current Scale Factor exposed property
+        public double CurrentScale => _currentScale;
 
+        public KeyboardWindow()
+        {
+            InitializeComponent();
+            SetupDragBehavior(MainBorder);
+        }
+
+        // ... (OnModifierStateChanged, etc.) ...
+
+        public override void SetScale(double scale)
+        {
+            // Call base to update _currentScale and raise events
+            base.SetScale(scale);
+            
+            WindowScaleTransform.ScaleX = scale;
+            WindowScaleTransform.ScaleY = scale;
+            
+            // Re-calculate window size based on content and new scale
+            UpdateWindowSize();
+        }
+
+        protected override bool IsTouchOnControl(DependencyObject source)
+        {
+             var parent = source;
+             while (parent != null && parent != this)
+             {
+                 if (parent is KeyButton || parent is System.Windows.Controls.Button || parent is System.Windows.Controls.Primitives.ButtonBase)
+                     return true;
+                 parent = System.Windows.Media.VisualTreeHelper.GetParent(parent);
+             }
+             return false;
+        }
+        
+        // OnZoomStart / OnZoomStep removed - using base implementation
 
         public void OnModifierStateChanged(ModifierStateManager manager)
         {
@@ -33,8 +66,9 @@ namespace RemOSK.Views
             
             UpdateKeyHighlight(91, manager.IsWinActive);    // LWin
 
-            // Update Labels
+            // Update Labels and CapsLock highlight
             bool caps = (GetKeyState(0x14) & 0x0001) != 0;
+            UpdateKeyHighlight(20, caps);  // CapsLock VK=20 (0x14)
             UpdateKeyLabels(manager.IsShiftActive, caps);
         }
 
@@ -58,19 +92,6 @@ namespace RemOSK.Views
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern short GetKeyState(int nVirtKey);
 
-        public event EventHandler<double>? ScaleChanged;
-        public event EventHandler<double>? VerticalPositionChanged;
-        public event EventHandler<double>? HorizontalPositionChanged;
-
-        // Current Scale Factor
-        private double _currentScale = 1.0;
-        public double CurrentScale => _currentScale;
-
-        public KeyboardWindow()
-        {
-            InitializeComponent();
-        }
-
         public void SetDragHandleVisibility(bool visible)
         {
             // No-op: Handles removed in favor of gestures
@@ -81,127 +102,9 @@ namespace RemOSK.Views
              return (_unscaledWidth + 10) * scale + 20; 
         }
 
-        public void SetScale(double scale)
-        {
-            _currentScale = scale;
-            WindowScaleTransform.ScaleX = scale;
-            WindowScaleTransform.ScaleY = scale;
-            
-            // Re-calculate window size based on content and new scale
-            UpdateWindowSize();
-        }
-        // Gesture state - track in SCREEN coordinates to avoid feedback loop
-        private System.Windows.Point _gestureStartScreenPoint;
-        private double _startWindowTop;
-        private double _startWindowLeft;
-        private double _startScale;
-        private bool _isGestureActive;
-
-        private void MainBorder_ManipulationStarting(object sender, System.Windows.Input.ManipulationStartingEventArgs e)
-        {
-            // Cancel manipulation if user touches a button (let button handle the click)
-            if (e.OriginalSource is DependencyObject source)
-            {
-                var parent = source;
-                while (parent != null && parent != this)
-                {
-                    if (parent is KeyButton || parent is System.Windows.Controls.Button || parent is System.Windows.Controls.Primitives.ButtonBase)
-                    {
-                        e.Cancel(); 
-                        e.Handled = false; 
-                        return;
-                    }
-                    parent = System.Windows.Media.VisualTreeHelper.GetParent(parent);
-                }
-            }
-
-            e.ManipulationContainer = this;
-            e.Mode = System.Windows.Input.ManipulationModes.All;
-            e.IsSingleTouchEnabled = true;
-        }
-
-        private void MainBorder_ManipulationInertiaStarting(object sender, System.Windows.Input.ManipulationInertiaStartingEventArgs e)
-        {
-            // Stop inertia immediately
-            e.TranslationBehavior.DesiredDeceleration = 10000.0;
-            e.ExpansionBehavior.DesiredDeceleration = 10000.0;
-            e.Handled = true;
-        }
-
-        private void ExitEditModeButton_Click(object sender, RoutedEventArgs e)
-        {
-            RequestExitEditMode?.Invoke(this, EventArgs.Empty);
-        }
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void MainBorder_ManipulationStarted(object sender, System.Windows.Input.ManipulationStartedEventArgs e)
-        {
-            // Capture start position in SCREEN coordinates to avoid feedback loop
-            _gestureStartScreenPoint = PointToScreen(e.ManipulationOrigin);
-            _startWindowTop = this.Top;
-            _startWindowLeft = this.Left;
-            _startScale = _currentScale;
-            _isGestureActive = true;
-        }
-
-        private void MainBorder_ManipulationDelta(object sender, System.Windows.Input.ManipulationDeltaEventArgs e)
-        {
-            if (!_isGestureActive)
-            {
-                e.Complete();
-                return;
-            }
-
-            if (e.IsInertial)
-            {
-                e.Complete();
-                _isGestureActive = false;
-                return;
-            }
-
-            // Get CURRENT touch point in SCREEN coordinates
-            var currentScreenPoint = PointToScreen(e.ManipulationOrigin);
-            
-            // Calculate delta in screen space (stable, independent of window position)
-            double screenDx = currentScreenPoint.X - _gestureStartScreenPoint.X;
-            double screenDy = currentScreenPoint.Y - _gestureStartScreenPoint.Y;
-
-            // 1. SCALE (Pinch) - Use cumulative scale (scale is relative, not absolute)
-            var cumulative = e.CumulativeManipulation;
-            double cumulativeScale = (cumulative.Scale.X + cumulative.Scale.Y) / 2.0;
-            
-            if (Math.Abs(cumulativeScale - 1.0) > 0.02)
-            {
-                double newScale = _startScale * cumulativeScale;
-                newScale = Math.Max(0.5, Math.Min(3.0, newScale));
-                
-                if (Math.Abs(newScale - _currentScale) > 0.01)
-                {
-                    SetScale(newScale);
-                    ScaleChanged?.Invoke(this, newScale);
-                }
-            }
-
-            // 2. MOVE - Apply screen-space delta directly
-            double newLeft = _startWindowLeft + screenDx;
-            double newTop = _startWindowTop + screenDy;
-
-            // Only update if meaningful change to reduce jitter
-            if (Math.Abs(this.Left - newLeft) > 1.0 || Math.Abs(this.Top - newTop) > 1.0)
-            {
-                this.Left = newLeft;
-                this.Top = newTop;
-                
-                HorizontalPositionChanged?.Invoke(this, this.Left);
-                VerticalPositionChanged?.Invoke(this, this.Top);
-            }
-
-            e.Handled = true;
-        }
-
+        
+        private double _dpiScale = 1.0;
+        
         private double _unscaledWidth = 0;
         private double _unscaledHeight = 0;
         private bool _isRightAligned = false;
@@ -221,12 +124,7 @@ namespace RemOSK.Views
                  {
                      double currentRight = this.Left + oldWidth;
                      double newLeft = currentRight - newWidth;
-                     // Console.WriteLine($"[Resize] RightAligned: OldW={oldWidth}, NewW={newWidth}, Right={currentRight}, NewLeft={newLeft}");
                      this.Left = newLeft;
-                 }
-                 else
-                 {
-                     // Console.WriteLine("[Resize] RightAligned but invalid width/left");
                  }
              }
 
@@ -282,11 +180,6 @@ namespace RemOSK.Views
 
                 KeysCanvas.Children.Add(btn);
             }
-
-            // Resize Window to fit content
-            // User requested: "one padding width taller at the bottom and two wider at the right"
-            // Assuming "padding width" is ~10-15px based on layout.
-            // Previous: Width = maxRight + 15, Height = maxBottom + 20
             
             // Store unscaled dimensions (max content + internal padding)
             _unscaledWidth = maxRight + 10; 
@@ -303,10 +196,8 @@ namespace RemOSK.Views
             UpdateKeyLabels(false, caps);
         }
 
-        public void SetEditMode(bool enabled)
+        protected override void OnEditModeChanged(bool enabled)
         {
-            MainBorder.IsManipulationEnabled = enabled;
-            
             // Visual Feedback: Green Border when editing
             MainBorder.BorderBrush = enabled ? System.Windows.Media.Brushes.LimeGreen : 
                                                (System.Windows.Media.SolidColorBrush)(new System.Windows.Media.BrushConverter().ConvertFrom("#88FFFFFF")!);
@@ -315,8 +206,7 @@ namespace RemOSK.Views
             // Toggle Keys Visibility: Hide keys in Edit Mode to show only outlines
             KeysCanvas.Visibility = enabled ? Visibility.Hidden : Visibility.Visible;
             
-            // Show Exit Button
-            ExitEditModeButton.Visibility = enabled ? Visibility.Visible : Visibility.Hidden;
+            // Exit button removed - use tray icon to exit edit mode
         }        
 
         public void UpdateKeyLabels(bool shift, bool caps) 
@@ -331,19 +221,13 @@ namespace RemOSK.Views
         {
             base.OnSourceInitialized(e);
             
-            // Set WS_EX_NOACTIVATE
-            var helper = new System.Windows.Interop.WindowInteropHelper(this);
-            SetWindowLong(helper.Handle, GWL_EXSTYLE, 
-                GetWindowLong(helper.Handle, GWL_EXSTYLE) | WS_EX_NOACTIVATE);
+            // DPI Detection
+            var source = PresentationSource.FromVisual(this);
+            if (source?.CompositionTarget != null)
+            {
+                _dpiScale = source.CompositionTarget.TransformToDevice.M11;
+                Console.WriteLine($"[KeyboardWindow] DPI Scale detected: {_dpiScale}");
+            }
         }
-
-        private const int GWL_EXSTYLE = -20;
-        private const int WS_EX_NOACTIVATE = 0x08000000;
-
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
     }
 }

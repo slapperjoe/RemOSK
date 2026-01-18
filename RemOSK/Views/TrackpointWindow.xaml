@@ -1,4 +1,4 @@
-<Window x:Class="RemOSK.Views.TrackpointWindow"
+<local:DraggableWindow x:Class="RemOSK.Views.TrackpointWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,20 +6,28 @@
         xmlns:local="clr-namespace:RemOSK.Views"
         mc:Ignorable="d"
         Title="RemOSK Trackpoint" 
-        Height="150" Width="150"
+        Height="100" Width="100"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
         Topmost="True"
-        ShowInTaskbar="False">
+        ShowInTaskbar="False"
+        Stylus.IsPressAndHoldEnabled="False"
+        Stylus.IsFlicksEnabled="False"
+        Stylus.IsTapFeedbackEnabled="False"
+        Stylus.IsTouchFeedbackEnabled="False"
+        PreviewTouchDown="Window_PreviewTouchDown"
+        PreviewTouchMove="Window_PreviewTouchMove"
+        PreviewTouchUp="Window_PreviewTouchUp"
+        ShowActivated="False">
     <Grid>
-        <Border x:Name="MainBorder" Background="#CC000000" CornerRadius="10" BorderBrush="#55FFFFFF" BorderThickness="1"
-                IsManipulationEnabled="False"
-                ManipulationStarting="MainBorder_ManipulationStarting"
-                ManipulationDelta="MainBorder_ManipulationDelta"
-                ManipulationStarted="MainBorder_ManipulationStarted"
-                ManipulationInertiaStarting="MainBorder_ManipulationInertiaStarting">
+        <!-- Circular trackpoint window -->
+        <Border x:Name="MainBorder" Background="#CC000000" CornerRadius="50" BorderBrush="#55FFFFFF" BorderThickness="2"
+                IsManipulationEnabled="False">
+            <Border.LayoutTransform>
+                <ScaleTransform x:Name="WindowScaleTransform" ScaleX="1.0" ScaleY="1.0"/>
+            </Border.LayoutTransform>
              <ContentControl x:Name="InputContainer" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="5"/>
         </Border>
     </Grid>
-</Window>
+</local:DraggableWindow>

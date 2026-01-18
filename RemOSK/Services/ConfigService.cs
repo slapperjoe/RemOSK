@@ -18,7 +18,18 @@ namespace RemOSK.Services
         public double RightWindowTop { get; set; } = -1;
         public double RightWindowLeft { get; set; } = -1;
         
+        // Trackpoint window position
+        public double TrackpointWindowTop { get; set; } = -1;
+        public double TrackpointWindowLeft { get; set; } = -1;
+        public double TrackpointUiScale { get; set; } = 1.0;
+        
+        // Click buttons window position
+        public double ClickButtonsWindowTop { get; set; } = -1;
+        public double ClickButtonsWindowLeft { get; set; } = -1;
+        public double ClickButtonsUiScale { get; set; } = 1.0;
+        
         public bool IsEditModeEnabled { get; set; } = false; // "Config Item for Size and Scale"
+        public bool IsRdpMode { get; set; } = false; // RDP mode - mouse clicks disabled as they don't work over RDP
     }
 
     public class ConfigService

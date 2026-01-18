@@ -17,9 +17,8 @@ namespace RemOSK
         {
             AttachConsole(-1); // Attach to parent console
 
-            // Disable WPF tablet support to force touch-to-mouse conversion
-            // This prevents the cursor from hiding on tablets/touch devices
-            TouchToMouseHelper.DisableWPFTabletSupport();
+            // Note: Disabled aggressive tablet support removal - it was blocking touch entirely
+            // TouchToMouseHelper.DisableWPFTabletSupport();
 
             _configService = new ConfigService();
             _keyboardManager = new KeyboardWindowManager(_configService);

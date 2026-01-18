@@ -5,18 +5,22 @@ using RemOSK.Services;
 
 namespace RemOSK.Views
 {
-    public partial class TrackpointWindow : Window
+    public partial class TrackpointWindow : DraggableWindow
     {
         public event EventHandler<System.Windows.Vector>? OnMove;
         public event EventHandler? OnLeftClick;
         public event EventHandler? OnRightClick;
-
+        
         private RawTouchHandler? _rawTouchHandler;
         private string _currentMode = "";
+        private TrackpointControl? _trackpointControl;
+
+        private bool _isEditModeEnabled;
 
         public TrackpointWindow()
         {
             InitializeComponent();
+            SetupDragBehavior(MainBorder);
         }
 
         public void SetMode(string mode)
@@ -30,8 +34,8 @@ namespace RemOSK.Views
             
             if (mode == "Trackpad")
             {
-                this.Width = 250;
-                this.Height = 200;
+                _baseWidth = 250;
+                _baseHeight = 200;
                 
                 // Use RawTouchHandler for raw WM_TOUCH processing
                 // This prevents Windows from moving cursor to touch position
@@ -47,114 +51,186 @@ namespace RemOSK.Views
             }
             else // Trackpoint or Fallback
             {
-                this.Width = 120;
-                this.Height = 120;
-                var tp = new TrackpointControl();
-                tp.MoveRequested += (s, v) => OnMove?.Invoke(this, v); // Remap event
+                _baseWidth = 100;
+                _baseHeight = 100;
                 
-                // Center the trackpoint
-                tp.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
-                tp.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+                // Use RawTouchHandler for Trackpoint too - bypasses WPF touch issues
+                _rawTouchHandler = new RawTouchHandler();
+                _rawTouchHandler.Attach(this);
                 
-                InputContainer.Content = tp;
+                // For trackpoint, we want CONTINUOUS movement based on distance from center
+                // The RawTouchHandler gives us absolute position, so we calculate offset from center
+                _rawTouchHandler.OnTouchDown += (s, e) => Console.WriteLine("[TrackpointWindow] Raw touch down");
+                _rawTouchHandler.OnTouchUp += (s, e) => Console.WriteLine("[TrackpointWindow] Raw touch up");
+                _rawTouchHandler.OnRelativeMove += HandleTrackpointMove;
+                
+                _trackpointControl = new TrackpointControl();
+                
+                // Wire up click events
+                _trackpointControl.OnLeftClick += (s, e) => OnLeftClick?.Invoke(this, e);
+                _trackpointControl.OnRightClick += (s, e) => OnRightClick?.Invoke(this, e);
+                
+                _trackpointControl.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+                _trackpointControl.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+                
+                InputContainer.Content = _trackpointControl;
             }
+            
+            // Apply current scale to new base dimensions
+            SetScale(_currentScale);
+        }
+        
+        // --- ZOOM LOGIC ---
+        private double _baseWidth = 100;
+        private double _baseHeight = 100;
+
+        public override void SetScale(double scale)
+        {
+            base.SetScale(scale);
+            WindowScaleTransform.ScaleX = scale;
+            WindowScaleTransform.ScaleY = scale;
+            
+            // Re-calculate window size based on current mode base size
+            this.Width = _baseWidth * scale; 
+            this.Height = _baseHeight * scale;
+        }
+        // ------------------
+        
+        private void HandleTrackpointMove(object? sender, System.Windows.Vector v)
+        {
+            // Forward to OnMove - RawTouchHandler handles the relative movement
+            OnMove?.Invoke(this, v);
         }
 
-        public void SetEditMode(bool enabled)
+        protected override void OnEditModeChanged(bool enabled)
         {
+            _isEditModeEnabled = enabled;
+            
             // Visual Feedback
             MainBorder.BorderBrush = enabled ? System.Windows.Media.Brushes.LimeGreen : 
                                                (System.Windows.Media.SolidColorBrush)(new System.Windows.Media.BrushConverter().ConvertFrom("#55FFFFFF")!);
-            MainBorder.BorderThickness = new Thickness(enabled ? 3 : 1);
+            MainBorder.BorderThickness = new Thickness(enabled ? 3 : 2);
             
             // Logic
-            MainBorder.IsManipulationEnabled = enabled;
             InputContainer.Visibility = enabled ? Visibility.Hidden : Visibility.Visible;
         }
 
-        // Gesture State - track in SCREEN coordinates to avoid feedback loop
-        private System.Windows.Point _gestureStartScreenPoint;
-        private double _startWindowTop;
-        private double _startWindowLeft;
-        private double _startWidth;
-        private double _startHeight;
-        private bool _isGestureActive;
-
-        private void MainBorder_ManipulationStarting(object sender, ManipulationStartingEventArgs e)
+        // Window-level touch handlers for Trackpoint mode
+        private TouchDevice? _windowCapturedTouch;
+        private System.Windows.Point _windowTouchCenter;
+        private bool _windowTouchActive;
+        private System.Windows.Threading.DispatcherTimer? _trackpointTimer;
+        private System.Windows.Vector _currentTrackpointVector;
+        
+        private void Window_PreviewTouchDown(object sender, TouchEventArgs e)
         {
-            e.ManipulationContainer = this;
-            e.Mode = ManipulationModes.All;
-            e.IsSingleTouchEnabled = true;
-            e.Handled = true;
-        }
-
-        private void MainBorder_ManipulationStarted(object sender, ManipulationStartedEventArgs e)
-        {
-            // Capture start position in SCREEN coordinates
-            _gestureStartScreenPoint = PointToScreen(e.ManipulationOrigin);
-            _startWindowTop = this.Top;
-            _startWindowLeft = this.Left;
-            _startWidth = this.Width;
-            _startHeight = this.Height;
-            _isGestureActive = true;
-        }
-
-        private void MainBorder_ManipulationDelta(object sender, ManipulationDeltaEventArgs e)
-        {
-            if (!_isGestureActive)
-            {
-                e.Complete();
-                return;
-            }
-
-            if (e.IsInertial)
-            {
-                e.Complete();
-                _isGestureActive = false;
-                return;
-            }
-
-            // Get CURRENT touch point in SCREEN coordinates
-            var currentScreenPoint = PointToScreen(e.ManipulationOrigin);
+            Console.WriteLine("[Window] PreviewTouchDown");
             
-            // Calculate delta in screen space (stable, independent of window position)
-            double screenDx = currentScreenPoint.X - _gestureStartScreenPoint.X;
-            double screenDy = currentScreenPoint.Y - _gestureStartScreenPoint.Y;
-
-            // 1. SCALE (Pinch) - Use cumulative scale
-            var cumulative = e.CumulativeManipulation;
-            double cumulativeScale = (cumulative.Scale.X + cumulative.Scale.Y) / 2.0;
+            // In edit mode, don't handle as trackpoint - let manipulation events handle it
+            if (_isEditModeEnabled) return;
             
-            if (Math.Abs(cumulativeScale - 1.0) > 0.02)
+            if (_currentMode == "Trackpoint" && !_windowTouchActive)
             {
-                double newWidth = _startWidth * cumulativeScale;
-                double newHeight = _startHeight * cumulativeScale;
-
-                newWidth = Math.Max(50, Math.Min(800, newWidth));
-                newHeight = Math.Max(50, Math.Min(800, newHeight));
-
-                this.Width = newWidth;
-                this.Height = newHeight;
+                _windowTouchActive = true;
+                _windowCapturedTouch = e.TouchDevice;
+                
+                // Trackpoint center is always center of current window size (which might be scaled)
+                _windowTouchCenter = new System.Windows.Point(this.ActualWidth / 2, this.ActualHeight / 2);
+                
+                e.TouchDevice.Capture(this);
+                
+                // Start timer for continuous movement
+                if (_trackpointTimer == null)
+                {
+                    _trackpointTimer = new System.Windows.Threading.DispatcherTimer();
+                    _trackpointTimer.Interval = TimeSpan.FromMilliseconds(16);
+                    _trackpointTimer.Tick += TrackpointTimer_Tick;
+                }
+                _trackpointTimer.Start();
+                
+                // Calculate initial vector
+                var touchPos = e.GetTouchPoint(this).Position;
+                _currentTrackpointVector = touchPos - _windowTouchCenter;
+                
+                e.Handled = true;
             }
-
-            // 2. MOVE - Apply screen-space delta directly
-            double newLeft = _startWindowLeft + screenDx;
-            double newTop = _startWindowTop + screenDy;
-
-            if (Math.Abs(this.Left - newLeft) > 1.0 || Math.Abs(this.Top - newTop) > 1.0)
-            {
-                this.Left = newLeft;
-                this.Top = newTop;
-            }
-             
-            e.Handled = true;
         }
-
-        private void MainBorder_ManipulationInertiaStarting(object sender, ManipulationInertiaStartingEventArgs e)
+        
+        private void Window_PreviewTouchMove(object sender, TouchEventArgs e)
         {
-            e.TranslationBehavior.DesiredDeceleration = 10000.0;
-            e.ExpansionBehavior.DesiredDeceleration = 10000.0;
-            e.Handled = true;
+            if (_currentMode == "Trackpoint" && _windowTouchActive && e.TouchDevice == _windowCapturedTouch)
+            {
+                var touchPos = e.GetTouchPoint(this).Position;
+                
+                // Only move if touch is inside the window
+                if (touchPos.X >= 0 && touchPos.X <= this.ActualWidth &&
+                    touchPos.Y >= 0 && touchPos.Y <= this.ActualHeight)
+                {
+                    _currentTrackpointVector = touchPos - _windowTouchCenter;
+                }
+                else
+                {
+                    // Touch went outside - stop movement
+                    _currentTrackpointVector = new System.Windows.Vector(0, 0);
+                }
+                e.Handled = true;
+            }
+        }
+        
+        private void Window_PreviewTouchUp(object sender, TouchEventArgs e)
+        {
+            Console.WriteLine("[Window] PreviewTouchUp");
+            if (_currentMode == "Trackpoint" && e.TouchDevice == _windowCapturedTouch)
+            {
+                _windowTouchActive = false;
+                _trackpointTimer?.Stop();
+                _windowCapturedTouch = null;
+                _currentTrackpointVector = new System.Windows.Vector(0, 0);
+                
+                // Reset stick visual to center
+                _trackpointControl?.ResetStickVisual();
+                
+                this.ReleaseTouchCapture(e.TouchDevice);
+                e.Handled = true;
+            }
+        }
+        
+        private void TrackpointTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_windowTouchActive && _currentTrackpointVector.Length > 3)
+            {
+                // Calculate movement based on distance from center
+                var v = _currentTrackpointVector;
+                
+                // Update stick visual to show direction
+                _trackpointControl?.UpdateStickVisual(v);
+                
+                // Scale: further from center = MUCH faster movement (3x increase)
+                // Max window radius is about 60px, so scale from 3px to 60px
+                double distanceFromCenter = v.Length;
+                double speed = Math.Min(distanceFromCenter / 5.0, 15.0); // Speed multiplier 0-15 (was 0-5)
+                
+                if (v.Length > 0.1)
+                {
+                    v.Normalize();
+                    v *= speed;
+                }
+                
+                // Log occasionally to verify timer is working
+                if (DateTime.Now.Millisecond < 30)
+                {
+                    Console.WriteLine($"[Trackpoint] Moving: dx={v.X:F1} dy={v.Y:F1} speed={speed:F1}");
+                }
+                
+                // Send the movement
+                OnMove?.Invoke(this, v);
+            }
+            else if (!_windowTouchActive)
+            {
+                // Reset stick when not active
+                _trackpointControl?.ResetStickVisual();
+            }
         }
     }
 }
+

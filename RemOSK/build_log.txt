@@ -1,15 +1,25 @@
   Determining projects to restore...
   All projects are up-to-date for restore.
-D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(20,16): warning CS8618: Non-nullable event 'OnKeyPressed' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the event as nullable. [D:\RemOSK\RemOSK\RemOSK_amagh0ow_wpftmp.csproj]
-D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(20,16): warning CS8618: Non-nullable event 'OnTrackpointMove' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the event as nullable. [D:\RemOSK\RemOSK\RemOSK_amagh0ow_wpftmp.csproj]
-D:\RemOSK\RemOSK\Views\TrackpointWindow.xaml.cs(18,38): error CS0176: Member 'HorizontalAlignment.Center' cannot be accessed with an instance reference; qualify it with a type name instead [D:\RemOSK\RemOSK\RemOSK_amagh0ow_wpftmp.csproj]
+D:\RemOSK\RemOSK\Views\TrackpointWindow.xaml.cs(160,37): error CS0104: 'Point' is an ambiguous reference between 'System.Drawing.Point' and 'System.Windows.Point' [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
+D:\RemOSK\RemOSK\Views\TrackpointWindow.xaml.cs(161,37): error CS0104: 'Point' is an ambiguous reference between 'System.Drawing.Point' and 'System.Windows.Point' [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
+D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(173,37): error CS0104: 'Point' is an ambiguous reference between 'System.Drawing.Point' and 'System.Windows.Point' [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
+D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(174,37): error CS0104: 'Point' is an ambiguous reference between 'System.Drawing.Point' and 'System.Windows.Point' [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
+D:\RemOSK\RemOSK\Controls\TrackpointControl.xaml.cs(168,36): warning CS0067: The event 'TrackpointControl.OnLeftClick' is never used [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
+D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(16,36): warning CS0067: The event 'KeyboardWindow.RequestExitEditMode' is never used [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
+D:\RemOSK\RemOSK\Controls\TrackpointControl.xaml.cs(169,36): warning CS0067: The event 'TrackpointControl.OnRightClick' is never used [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
+D:\RemOSK\RemOSK\Views\ClickButtonsWindow.xaml.cs(20,22): warning CS0414: The field 'ClickButtonsWindow._isHolding' is assigned but its value is never used [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
 
 Build FAILED.
 
-D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(20,16): warning CS8618: Non-nullable event 'OnKeyPressed' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the event as nullable. [D:\RemOSK\RemOSK\RemOSK_amagh0ow_wpftmp.csproj]
-D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(20,16): warning CS8618: Non-nullable event 'OnTrackpointMove' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the event as nullable. [D:\RemOSK\RemOSK\RemOSK_amagh0ow_wpftmp.csproj]
-D:\RemOSK\RemOSK\Views\TrackpointWindow.xaml.cs(18,38): error CS0176: Member 'HorizontalAlignment.Center' cannot be accessed with an instance reference; qualify it with a type name instead [D:\RemOSK\RemOSK\RemOSK_amagh0ow_wpftmp.csproj]
-    2 Warning(s)
-    1 Error(s)
+D:\RemOSK\RemOSK\Controls\TrackpointControl.xaml.cs(168,36): warning CS0067: The event 'TrackpointControl.OnLeftClick' is never used [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
+D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(16,36): warning CS0067: The event 'KeyboardWindow.RequestExitEditMode' is never used [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
+D:\RemOSK\RemOSK\Controls\TrackpointControl.xaml.cs(169,36): warning CS0067: The event 'TrackpointControl.OnRightClick' is never used [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
+D:\RemOSK\RemOSK\Views\ClickButtonsWindow.xaml.cs(20,22): warning CS0414: The field 'ClickButtonsWindow._isHolding' is assigned but its value is never used [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
+D:\RemOSK\RemOSK\Views\TrackpointWindow.xaml.cs(160,37): error CS0104: 'Point' is an ambiguous reference between 'System.Drawing.Point' and 'System.Windows.Point' [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
+D:\RemOSK\RemOSK\Views\TrackpointWindow.xaml.cs(161,37): error CS0104: 'Point' is an ambiguous reference between 'System.Drawing.Point' and 'System.Windows.Point' [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
+D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(173,37): error CS0104: 'Point' is an ambiguous reference between 'System.Drawing.Point' and 'System.Windows.Point' [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
+D:\RemOSK\RemOSK\Views\KeyboardWindow.xaml.cs(174,37): error CS0104: 'Point' is an ambiguous reference between 'System.Drawing.Point' and 'System.Windows.Point' [D:\RemOSK\RemOSK\RemOSK_2mtx5ztu_wpftmp.csproj]
+    4 Warning(s)
+    4 Error(s)
 
-Time Elapsed 00:00:00.83
+Time Elapsed 00:00:00.93

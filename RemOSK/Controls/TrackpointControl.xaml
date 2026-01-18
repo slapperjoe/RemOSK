@@ -4,20 +4,24 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             Height="60" Width="60">
-    <Grid Background="Transparent" 
-          PreviewMouseDown="OnMouseDown" 
-          PreviewMouseMove="OnMouseMove" 
-          PreviewMouseUp="OnMouseUp">
+             Height="90" Width="90">
+    <Grid>
+        <!-- Circular Trackpoint joystick - fills the whole control -->
+        <!-- Base circle (dark background) -->
+        <Ellipse Fill="#333" Width="80" Height="80" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         
-        <!-- Base -->
-        <Ellipse Fill="#444" Width="50" Height="50" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-        
-        <!-- Stick Cap -->
-        <Ellipse x:Name="Stick" Fill="#D00" Width="30" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <!-- Stick Cap (moves with direction) -->
+        <Ellipse x:Name="Stick" Fill="#D00" Width="35" Height="35" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Ellipse.RenderTransform>
+                <TranslateTransform x:Name="StickTransform" X="0" Y="0"/>
+            </Ellipse.RenderTransform>
             <Ellipse.Effect>
                 <DropShadowEffect Color="Black" Opacity="0.5" BlurRadius="5" ShadowDepth="2"/>
             </Ellipse.Effect>
         </Ellipse>
+        
+        <!-- Hint text -->
+        <TextBlock Text="TAP=L  HOLD=R" FontSize="8" Foreground="#666" 
+                   HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
     </Grid>
 </UserControl>

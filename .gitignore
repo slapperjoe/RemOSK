@@ -1,32 +1,12 @@
-# .NET build outputs
-bin/
-obj/
-out/
-
-# Visual Studio
-.vs/
-*.user
-*.suo
-*.userosscache
-*.sln.docstates
-
-# Rider
-.idea/
-
-# NuGet
-*.nupkg
-*.snupkg
-packages/
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
+# .NET Core
+*.swp
+*.*~
+project.lock.json
+.project
+.classpath
+.factorypath
+.settings/
+.vscode/
 
 # Build results
 [Dd]ebug/
@@ -41,17 +21,47 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
-# Test results
-TestResults/
-[Tt]est[Rr]esult*/
+# Dependencies
+*.nupkg
+*.snupkg
+*.dcre
+*.dll
+*.exe
+*.pdb
+*.userprefs
+*.usertasks
 
-# JetBrains Rider
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.ide
+*.cache
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
 *.sln.iml
 
-# Publish output
-publish/
+# MacOS
+.DS_Store
 
-# Project-specific
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Project Specific
+*.log
 *.tmp
 *.bak
-*.log
+.remosk/
+config.json

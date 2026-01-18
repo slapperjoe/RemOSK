@@ -1,0 +1,84 @@
+<Window x:Class="RemOSK.Views.CursorOverlay"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Cursor" 
+        Width="48" Height="48"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        IsHitTestVisible="False"
+        ResizeMode="NoResize">
+    <Canvas>
+        <!-- Arrow cursor (default pointer) -->
+        <Path x:Name="ArrowCursor" Fill="#FFFF00" Stroke="Black" StrokeThickness="2" Visibility="Visible">
+            <Path.Data>
+                <PathGeometry>
+                    <PathFigure StartPoint="0,0" IsClosed="True">
+                        <LineSegment Point="0,36"/>
+                        <LineSegment Point="10,28"/>
+                        <LineSegment Point="16,42"/>
+                        <LineSegment Point="24,38"/>
+                        <LineSegment Point="18,26"/>
+                        <LineSegment Point="28,26"/>
+                    </PathFigure>
+                </PathGeometry>
+            </Path.Data>
+        </Path>
+        
+        <!-- Text caret cursor (I-beam) -->
+        <Path x:Name="TextCursor" Fill="#FFFF00" Stroke="Black" StrokeThickness="1.5" Visibility="Collapsed">
+            <Path.Data>
+                <PathGeometry>
+                    <PathFigure StartPoint="8,2" IsClosed="False">
+                        <LineSegment Point="22,2"/>
+                    </PathFigure>
+                    <PathFigure StartPoint="15,2" IsClosed="False">
+                        <LineSegment Point="15,38"/>
+                    </PathFigure>
+                    <PathFigure StartPoint="8,38" IsClosed="False">
+                        <LineSegment Point="22,38"/>
+                    </PathFigure>
+                </PathGeometry>
+            </Path.Data>
+        </Path>
+        
+        <!-- Hand/pointer cursor -->
+        <Path x:Name="HandCursor" Fill="#FFFF00" Stroke="Black" StrokeThickness="1.5" Visibility="Collapsed">
+            <Path.Data>
+                <PathGeometry>
+                    <PathFigure StartPoint="15,8" IsClosed="True">
+                        <LineSegment Point="15,28"/>
+                        <LineSegment Point="10,32"/>
+                        <LineSegment Point="10,36"/>
+                        <LineSegment Point="26,36"/>
+                        <LineSegment Point="26,18"/>
+                        <LineSegment Point="22,14"/>
+                        <LineSegment Point="22,8"/>
+                        <LineSegment Point="18,6"/>
+                    </PathFigure>
+                </PathGeometry>
+            </Path.Data>
+        </Path>
+        
+        <!-- Resize horizontal cursor (<->) -->
+        <Path x:Name="ResizeHCursor" Fill="#FFFF00" Stroke="Black" StrokeThickness="1.5" Visibility="Collapsed">
+            <Path.Data>
+                <PathGeometry>
+                    <PathFigure StartPoint="4,20" IsClosed="True">
+                        <LineSegment Point="12,12"/>
+                        <LineSegment Point="12,16"/>
+                        <LineSegment Point="32,16"/>
+                        <LineSegment Point="32,12"/>
+                        <LineSegment Point="40,20"/>
+                        <LineSegment Point="32,28"/>
+                        <LineSegment Point="32,24"/>
+                        <LineSegment Point="12,24"/>
+                        <LineSegment Point="12,28"/>
+                    </PathFigure>
+                </PathGeometry>
+            </Path.Data>
+        </Path>
+    </Canvas>
+</Window>

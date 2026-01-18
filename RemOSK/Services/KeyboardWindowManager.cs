@@ -1,6 +1,7 @@
 using System.Windows;
 using RemOSK.Views;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 
 namespace RemOSK.Services
 {
@@ -17,6 +18,16 @@ using RemOSK.Models;
         private readonly ConfigService _configService;
         private readonly ModifierStateManager _modifierManager;
         private KeyboardLayout _currentLayout = null!;
+        
+        // Inactivity transparency
+        private DispatcherTimer? _inactivityTimer;
+        private bool _isFadedOut;
+        private const double FADED_OPACITY = 0.3;
+        private const double NORMAL_OPACITY = 1.0;
+        
+        // Focus tracking - continuously track last "user" window (not tray/system)
+        private IntPtr _lastUserForegroundWindow = IntPtr.Zero;
+        private DispatcherTimer? _focusTrackingTimer;
 
         public KeyboardWindowManager(ConfigService configService)
         {
@@ -24,8 +35,56 @@ using RemOSK.Models;
             _layoutLoader = new LayoutLoader();
             _inputInjector = new InputInjector();
             _modifierManager = new ModifierStateManager(_inputInjector);
+            
+            // Initialize inactivity timer (5 seconds)
+            _inactivityTimer = new DispatcherTimer();
+            _inactivityTimer.Interval = TimeSpan.FromSeconds(5);
+            _inactivityTimer.Tick += InactivityTimer_Tick;
+            
+            // Initialize focus tracking timer (every 100ms)
+            _focusTrackingTimer = new DispatcherTimer();
+            _focusTrackingTimer.Interval = TimeSpan.FromMilliseconds(100);
+            _focusTrackingTimer.Tick += FocusTrackingTimer_Tick;
+            _focusTrackingTimer.Start();
 
             ReloadLayout(_configService.CurrentConfig.LastUsedLayout);
+        }
+        
+        private int _focusDebugCounter = 0;
+        private void FocusTrackingTimer_Tick(object? sender, EventArgs e)
+        {
+            IntPtr current = GetForegroundWindow();
+            if (current == IntPtr.Zero) return;
+            
+            string title = GetWindowTitle(current);
+            
+            // Debug: Log every 50th check to see what we're seeing
+            _focusDebugCounter++;
+            if (_focusDebugCounter % 50 == 0)
+            {
+                Console.WriteLine($"[FOCUS DEBUG] Checking: '{title}' (0x{current:X})");
+            }
+            
+            // Skip our actual RemOSK windows (exact titles) and unknown windows
+            // Don't skip VS Code just because it has "RemOSK" in the path!
+            bool isOurWindow = title == "RemOSK Keyboard" || 
+                               title == "RemOSK Trackpoint" || 
+                               title == "RemOSK Clicks";
+            if (isOurWindow || title == "(unknown)" || string.IsNullOrEmpty(title))
+            {
+                return;
+            }
+            
+            // Skip if it's a shell/tray window
+            if (title.Contains("Shell_TrayWnd") || title.Contains("Taskbar"))
+                return;
+            
+            // Update tracked window and log when it changes
+            if (current != _lastUserForegroundWindow)
+            {
+                Console.WriteLine($"[FOCUS TRACK] New user window: '{title}' (0x{current:X})");
+                _lastUserForegroundWindow = current;
+            }
         }
 
         public void ReloadLayout(string layoutName)
@@ -50,20 +109,74 @@ using RemOSK.Models;
 
         public void ToggleVisibility()
         {
+            // Pause tracking during toggle to prevent race conditions
+            _focusTrackingTimer?.Stop();
+            
+            // Capture the window we want to restore BEFORE anything else
+            IntPtr windowToRestore = _lastUserForegroundWindow;
+            string windowName = GetWindowTitle(windowToRestore);
+            Console.WriteLine($"[FOCUS DIAG] === TOGGLE START === Window to restore: 0x{windowToRestore:X} = '{windowName}'");
+            
             if (_isVisible)
             {
                 Hide();
             }
             else
             {
+                IntPtr currentFg = GetForegroundWindow();
+                Console.WriteLine($"[FOCUS DIAG] Current foreground: 0x{currentFg:X} = '{GetWindowTitle(currentFg)}'");
                 Show();
             }
+            
+            // Schedule focus restore with a small delay to let the tray click fully complete
+            // The tray click steals focus AFTER our SetForegroundWindow, so we need to wait
+            if (windowToRestore != IntPtr.Zero)
+            {
+                System.Windows.Application.Current.Dispatcher.BeginInvoke(
+                    System.Windows.Threading.DispatcherPriority.Background,
+                    new Action(() =>
+                    {
+                        System.Threading.Thread.Sleep(200); // Wait for Tray/Taskbar to release focus
+                        Console.WriteLine($"[FOCUS DIAG] Delayed restore to: '{windowName}'");
+                        bool success = SetForegroundWindow(windowToRestore);
+                        Console.WriteLine($"[FOCUS DIAG] SetForegroundWindow returned: {success}");
+                        Console.WriteLine($"[FOCUS DIAG] Final foreground: '{GetWindowTitle(GetForegroundWindow())}'");
+                        
+                        // Resume tracking after restore completes
+                        _focusTrackingTimer?.Start();
+                    }));
+            }
+            else
+            {
+                // No window to restore, just resume tracking
+                _focusTrackingTimer?.Start();
+            }
+            
+            Console.WriteLine($"[FOCUS DIAG] === TOGGLE END ===");
         }
-
+        
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+        
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+        
+        [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+        private static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder text, int count);
+        
+        private static string GetWindowTitle(IntPtr hWnd)
+        {
+            const int nChars = 256;
+            var buff = new System.Text.StringBuilder(nChars);
+            if (GetWindowText(hWnd, buff, nChars) > 0)
+                return buff.ToString();
+            return "(unknown)";
+        }
 
 
         public void Show()
         {
+            Console.WriteLine("[FOCUS DIAG] >>> Show() ENTRY");
             if (_leftWindow == null)
             {
                 _leftWindow = new KeyboardWindow();
@@ -98,6 +211,22 @@ using RemOSK.Models;
                 };
 
                 _modifierManager.StateChanged += (s, e) => ((KeyboardWindow)_leftWindow).OnModifierStateChanged(_modifierManager);
+                
+                // Edit mode events
+                ((KeyboardWindow)_leftWindow).RequestExitEditMode += (s, e) =>
+                {
+                    _configService.CurrentConfig.IsEditModeEnabled = false;
+                    _configService.SaveConfig();
+                    UpdateEditMode();
+                };
+                
+                ((KeyboardWindow)_leftWindow).RequestEnterEditMode += (s, e) =>
+                {
+                    Console.WriteLine("[Manager] Long-press on Left - entering edit mode");
+                    _configService.CurrentConfig.IsEditModeEnabled = true;
+                    _configService.SaveConfig();
+                    UpdateEditMode();
+                };
             }
             
             // Set Initial Position for Left Window
@@ -154,14 +283,11 @@ using RemOSK.Models;
                     _configService.SaveConfig();
                     UpdateEditMode();
                 };
-            }
-            
-            // Also subscribe Left Window
-            if (_leftWindow != null)
-            {
-                 ((KeyboardWindow)_leftWindow!).RequestExitEditMode += (s, e) =>
+                
+                ((KeyboardWindow)_rightWindow!).RequestEnterEditMode += (s, e) =>
                 {
-                    _configService.CurrentConfig.IsEditModeEnabled = false;
+                    Console.WriteLine("[Manager] Long-press detected - entering edit mode");
+                    _configService.CurrentConfig.IsEditModeEnabled = true;
                     _configService.SaveConfig();
                     UpdateEditMode();
                 };
@@ -174,6 +300,103 @@ using RemOSK.Models;
             if (_configService.CurrentConfig.MouseMode != "Off" && _trackpointWindow != null)
             {
                 _trackpointWindow.Show();
+            }
+            
+            // Show Click Buttons Window when mouse mode is enabled
+            if (_configService.CurrentConfig.MouseMode != "Off")
+            {
+                if (_clickButtonsWindow == null)
+                {
+                    _clickButtonsWindow = new ClickButtonsWindow();
+                    
+                    // Use saved position or default
+                    if (_configService.CurrentConfig.ClickButtonsWindowLeft != -1)
+                        _clickButtonsWindow.Left = _configService.CurrentConfig.ClickButtonsWindowLeft;
+                    else
+                        _clickButtonsWindow.Left = (SystemParameters.PrimaryScreenWidth / 2) + 70;
+                    
+                    if (_configService.CurrentConfig.ClickButtonsWindowTop != -1)
+                        _clickButtonsWindow.Top = _configService.CurrentConfig.ClickButtonsWindowTop;
+                    else
+                        _clickButtonsWindow.Top = (SystemParameters.PrimaryScreenHeight / 2) + 100;
+                    
+                    // Apply saved scale
+                    _clickButtonsWindow.SetScale(_configService.CurrentConfig.ClickButtonsUiScale);
+                    _clickButtonsWindow.ScaleChanged += (s, scale) =>
+                    {
+                        _configService.CurrentConfig.ClickButtonsUiScale = scale;
+                        _configService.SaveConfig();
+                    };
+                    
+                    // Wire up click events (with activity registration and click-through)
+                    _clickButtonsWindow.OnLeftClick += (s, e) => 
+                    { 
+                        RegisterActivity();
+                        SetClickThrough(true);
+                        try
+                        {
+                            // Use absolute position from cursor overlay with RDP viewport bounds
+                            if (_cursorOverlay != null)
+                            {
+                                var pos = _cursorOverlay.CurrentPosition;
+                                var bounds = _cursorOverlay.ScreenBounds;
+                                _inputInjector.SendLeftClickAt(pos.X, pos.Y, bounds.Width, bounds.Height);
+                            }
+                            else
+                            {
+                                _inputInjector.SendLeftClick();
+                            }
+                        }
+                        finally
+                        {
+                            SetClickThrough(false);
+                        }
+                    };
+                    _clickButtonsWindow.OnMiddleClick += (s, e) => 
+                    { 
+                        RegisterActivity();
+                        SetClickThrough(true);
+                        try { _inputInjector.SendMiddleClick(); }
+                        finally { SetClickThrough(false); }
+                    };
+                    _clickButtonsWindow.OnRightClick += (s, e) => 
+                    {
+                        RegisterActivity();
+                        SetClickThrough(true);
+                        try { _inputInjector.SendRightClick(); }
+                        finally { SetClickThrough(false); }
+                    };
+                    _clickButtonsWindow.OnHoldToggle += (s, isHolding) =>
+                    {
+                        RegisterActivity();
+                        if (isHolding)
+                            _inputInjector.SendLeftButtonDown();
+                        else
+                            _inputInjector.SendLeftButtonUp();
+                    };
+                    
+                    // Position persistence
+                    _clickButtonsWindow.HorizontalPositionChanged += (s, left) =>
+                    {
+                        _configService.CurrentConfig.ClickButtonsWindowLeft = left;
+                        _configService.SaveConfig();
+                    };
+                    _clickButtonsWindow.VerticalPositionChanged += (s, top) =>
+                    {
+                        _configService.CurrentConfig.ClickButtonsWindowTop = top;
+                        _configService.SaveConfig();
+                    };
+                    
+                    // Long-press to enter edit mode
+                    _clickButtonsWindow.RequestEnterEditMode += (s, e) =>
+                    {
+                        Console.WriteLine("[Manager] Long-press on ClickButtons - entering edit mode");
+                        _configService.CurrentConfig.IsEditModeEnabled = true;
+                        _configService.SaveConfig();
+                        UpdateEditMode();
+                    };
+                }
+                _clickButtonsWindow.Show();
             }
             
             // Apply Acrylic State
@@ -228,6 +451,7 @@ using RemOSK.Models;
             if (_rightWindow != null) ((KeyboardWindow)_rightWindow!).SetEditMode(enabled);
             
             if (_trackpointWindow != null) ((TrackpointWindow)_trackpointWindow!).SetEditMode(enabled);
+            _clickButtonsWindow?.SetEditMode(enabled);
         }
 
         public void UpdateAcrylicState()
@@ -261,6 +485,8 @@ using RemOSK.Models;
         }
 
         private Window? _trackpointWindow;
+        private CursorOverlay? _cursorOverlay;
+        private ClickButtonsWindow? _clickButtonsWindow;
 
         public void UpdateMouseMode()
         {
@@ -271,13 +497,56 @@ using RemOSK.Models;
                 if (_trackpointWindow == null)
                 {
                     var newWin = new TrackpointWindow();
-                    // Default Center
-                    newWin.Left = (SystemParameters.PrimaryScreenWidth / 2) - (newWin.Width / 2);
-                    newWin.Top = (SystemParameters.PrimaryScreenHeight / 2) + 100; 
+                    
+                    // Use saved position or default center
+                    if (_configService.CurrentConfig.TrackpointWindowLeft != -1)
+                        newWin.Left = _configService.CurrentConfig.TrackpointWindowLeft;
+                    else
+                        newWin.Left = (SystemParameters.PrimaryScreenWidth / 2) - (newWin.Width / 2);
+                    
+                    if (_configService.CurrentConfig.TrackpointWindowTop != -1)
+                        newWin.Top = _configService.CurrentConfig.TrackpointWindowTop;
+                    else
+                        newWin.Top = (SystemParameters.PrimaryScreenHeight / 2) + 100;
+                    
+                    // Apply saved scale
+                    newWin.SetScale(_configService.CurrentConfig.TrackpointUiScale);
+                    newWin.ScaleChanged += (s, scale) =>
+                    {
+                        _configService.CurrentConfig.TrackpointUiScale = scale;
+                        _configService.SaveConfig();
+                    };
                     
                     newWin.OnMove += Window_OnTrackpointMove;
                     newWin.OnLeftClick += (s, e) => _inputInjector.SendLeftClick();
                     newWin.OnRightClick += (s, e) => _inputInjector.SendRightClick();
+                    
+                    // Position persistence
+                    newWin.HorizontalPositionChanged += (s, left) =>
+                    {
+                        _configService.CurrentConfig.TrackpointWindowLeft = left;
+                        _configService.SaveConfig();
+                    };
+                    newWin.VerticalPositionChanged += (s, top) =>
+                    {
+                        _configService.CurrentConfig.TrackpointWindowTop = top;
+                        _configService.SaveConfig();
+                    };
+                    
+                    // Long-press to enter edit mode
+                    newWin.RequestEnterEditMode += (s, e) =>
+                    {
+                        Console.WriteLine("[Manager] Long-press on Trackpoint - entering edit mode");
+                        _configService.CurrentConfig.IsEditModeEnabled = true;
+                        _configService.SaveConfig();
+                        UpdateEditMode();
+                    };
+                    
+                    // Create cursor overlay for touch mode
+                    if (_cursorOverlay == null)
+                    {
+                        _cursorOverlay = new CursorOverlay();
+                    }
                     
                     _trackpointWindow = newWin;
                 }
@@ -293,6 +562,7 @@ using RemOSK.Models;
             else
             {
                 _trackpointWindow?.Hide();
+                _cursorOverlay?.DisableOverlay();
             }
         }
 
@@ -315,6 +585,8 @@ using RemOSK.Models;
             }
             
             _trackpointWindow?.Hide();
+            _cursorOverlay?.DisableOverlay();
+            _clickButtonsWindow?.Hide();
 
             _isVisible = false;
         }
@@ -327,14 +599,23 @@ using RemOSK.Models;
             _leftWindow?.Close();
             _rightWindow?.Close();
             _trackpointWindow?.Close();
+            _clickButtonsWindow?.Close();
             
             _leftWindow = null;
             _rightWindow = null;
             _trackpointWindow = null;
+            _clickButtonsWindow = null;
         }
 
         private void Window_OnKeyPressed(object? sender, RemOSK.Controls.KeyButton e)
         {
+            // Reset inactivity timer - if waking up, consume this touch
+            if (RegisterActivity())
+            {
+                Console.WriteLine("[Manager] Consumed wake-up touch, skipping key press");
+                return;
+            }
+            
             Console.WriteLine($"[Manager] Key Pressed: {e.Label} (VK: {e.VirtualKeyCode})");
             // Use Modifier Manager to handle key
             _modifierManager.HandleKey(e.VirtualKeyCode, true);
@@ -342,7 +623,94 @@ using RemOSK.Models;
 
         private void Window_OnTrackpointMove(object? sender, System.Windows.Vector vector)
         {
-            _inputInjector.SendMouseMove((int)vector.X, (int)vector.Y);
+            RegisterActivity(); // Reset inactivity timer
+            
+            // Enable cursor overlay when trackpoint is used
+            _cursorOverlay?.EnableOverlay();
+            
+            // Move our custom cursor (updates local state)
+            if (_cursorOverlay != null)
+            {
+                _cursorOverlay.MoveCursor(vector.X, vector.Y);
+                
+                // Now send the ACTUAL system move via InputInjector
+                // This is crucial for RDP - SendInput triggers the remote session to acknowledge mouse movement
+                // which then triggers window hit-testing and cursor shape updates.
+                var pos = _cursorOverlay.CurrentPosition;
+                var bounds = _cursorOverlay.ScreenBounds;
+                _inputInjector.SendMouseMoveTo(pos.X, pos.Y, bounds.Width, bounds.Height);
+                
+                // Force shape update
+                _cursorOverlay.UpdateCursorShape();
+            }
+        }
+        
+        // Inactivity transparency methods
+        private void InactivityTimer_Tick(object? sender, EventArgs e)
+        {
+            _inactivityTimer?.Stop();
+            FadeOutWindows();
+        }
+        
+        /// <summary>
+        /// Registers user activity. Returns true if this was a "wake up" touch that should be consumed.
+        /// </summary>
+        public bool RegisterActivity()
+        {
+            // Restart the timer
+            _inactivityTimer?.Stop();
+            _inactivityTimer?.Start();
+            
+            // If faded, restore opacity and return true to indicate this touch should be consumed
+            if (_isFadedOut)
+            {
+                RestoreWindows();
+                return true; // Consume this touch - it was just to wake up
+            }
+            return false; // Normal touch, don't consume
+        }
+        
+        private void FadeOutWindows()
+        {
+            _isFadedOut = true;
+            Console.WriteLine("[Manager] Fading windows due to inactivity");
+            
+            _leftWindow?.Dispatcher.Invoke(() => _leftWindow.Opacity = FADED_OPACITY);
+            _rightWindow?.Dispatcher.Invoke(() => _rightWindow.Opacity = FADED_OPACITY);
+            _trackpointWindow?.Dispatcher.Invoke(() => _trackpointWindow.Opacity = FADED_OPACITY);
+            _clickButtonsWindow?.Dispatcher.Invoke(() => _clickButtonsWindow.Opacity = FADED_OPACITY);
+        }
+        
+        private void RestoreWindows()
+        {
+            _isFadedOut = false;
+            Console.WriteLine("[Manager] Restoring window opacity");
+            
+            _leftWindow?.Dispatcher.Invoke(() => _leftWindow.Opacity = NORMAL_OPACITY);
+            _rightWindow?.Dispatcher.Invoke(() => _rightWindow.Opacity = NORMAL_OPACITY);
+            _trackpointWindow?.Dispatcher.Invoke(() => _trackpointWindow.Opacity = NORMAL_OPACITY);
+            _clickButtonsWindow?.Dispatcher.Invoke(() => _clickButtonsWindow.Opacity = NORMAL_OPACITY);
+        }
+        
+        /// <summary>
+        /// Set click-through mode for all windows. When enabled, virtual mouse clicks pass through to underlying apps.
+        /// </summary>
+        public void SetClickThrough(bool enabled)
+        {
+            if (enabled)
+            {
+                (_leftWindow as KeyboardWindow)?.EnableClickThrough();
+                (_rightWindow as KeyboardWindow)?.EnableClickThrough();
+                (_trackpointWindow as TrackpointWindow)?.EnableClickThrough();
+                (_clickButtonsWindow as ClickButtonsWindow)?.EnableClickThrough();
+            }
+            else
+            {
+                (_leftWindow as KeyboardWindow)?.DisableClickThrough();
+                (_rightWindow as KeyboardWindow)?.DisableClickThrough();
+                (_trackpointWindow as TrackpointWindow)?.DisableClickThrough();
+                (_clickButtonsWindow as ClickButtonsWindow)?.DisableClickThrough();
+            }
         }
     }
 }

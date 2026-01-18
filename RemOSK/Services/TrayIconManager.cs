@@ -11,6 +11,9 @@ namespace RemOSK.Services
         private readonly KeyboardWindowManager _windowManager;
 
         private readonly ConfigService _configService;
+        
+        // Keep reference to sync checkbox state
+        private ToolStripMenuItem? _editModeItem;
 
         public TrayIconManager(KeyboardWindowManager windowManager, ConfigService configService)
         {
@@ -21,7 +24,40 @@ namespace RemOSK.Services
 
         public void Initialize()
         {
-            _notifyIcon.Icon = SystemIcons.Application; // Default icon
+            try
+            {
+                var iconUri = new Uri("pack://application:,,,/Resources/Icons/app.ico");
+                var iconStream = System.Windows.Application.GetResourceStream(iconUri).Stream;
+                
+                // Check if icon is valid (larger than tiny bytes)
+                if (iconStream.Length > 200)
+                {
+                    _notifyIcon.Icon = new Icon(iconStream);
+                }
+                else
+                {
+                    throw new Exception("Icon file too small (corrupt).");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to load app.ico: {ex.Message}. Attempting fallback to PNG.");
+                try
+                {
+                    var pngUri = new Uri("pack://application:,,,/Resources/Icons/app_icon.png");
+                    var pngStream = System.Windows.Application.GetResourceStream(pngUri).Stream;
+                    using (var bitmap = new Bitmap(pngStream))
+                    {
+                        var hIcon = bitmap.GetHicon();
+                        _notifyIcon.Icon = Icon.FromHandle(hIcon);
+                    }
+                }
+                catch (Exception ex2)
+                {
+                    Console.WriteLine($"Fallback icon failed: {ex2.Message}");
+                    _notifyIcon.Icon = SystemIcons.Application; // Final fallback
+                }
+            }
             _notifyIcon.Visible = true;
             _notifyIcon.Text = "RemOSK";
             
@@ -30,7 +66,18 @@ namespace RemOSK.Services
             {
                 if (e.Button == MouseButtons.Left)
                 {
-                    _windowManager.ToggleVisibility();
+                    // If in edit mode, exit edit mode instead of hiding
+                    if (_configService.CurrentConfig.IsEditModeEnabled)
+                    {
+                        _configService.CurrentConfig.IsEditModeEnabled = false;
+                        _configService.SaveConfig();
+                        _windowManager.UpdateEditMode();
+                        Console.WriteLine("[TrayIcon] Exited edit mode");
+                    }
+                    else
+                    {
+                        _windowManager.ToggleVisibility();
+                    }
                 }
             };
 
@@ -81,7 +128,7 @@ namespace RemOSK.Services
             contextMenu.Items.Add(acrylicItem);
 
             // "Edit Mode" Toggle (Move/Scale)
-            var editModeItem = new ToolStripMenuItem("Edit Mode (Move/Scale)", null, (s, e) =>
+            _editModeItem = new ToolStripMenuItem("Edit Mode (Move/Scale)", null, (s, e) =>
             {
                 var enable = !_configService.CurrentConfig.IsEditModeEnabled;
                 _configService.CurrentConfig.IsEditModeEnabled = enable;
@@ -92,7 +139,27 @@ namespace RemOSK.Services
                 Checked = _configService.CurrentConfig.IsEditModeEnabled,
                 CheckOnClick = true
             };
-            contextMenu.Items.Add(editModeItem);
+            contextMenu.Items.Add(_editModeItem);
+            
+            // Sync checkbox state when menu opens (in case exited via tray icon click)
+            contextMenu.Opening += (s, e) =>
+            {
+                if (_editModeItem != null)
+                    _editModeItem.Checked = _configService.CurrentConfig.IsEditModeEnabled;
+            };
+            
+            // RDP Mode Toggle (disables click buttons since SendInput doesn't work over RDP)
+            var rdpModeItem = new ToolStripMenuItem("RDP Mode (disable clicks)", null, (s, e) =>
+            {
+                var enable = !_configService.CurrentConfig.IsRdpMode;
+                _configService.CurrentConfig.IsRdpMode = enable;
+                _configService.SaveConfig();
+            })
+            {
+                Checked = _configService.CurrentConfig.IsRdpMode,
+                CheckOnClick = true
+            };
+            contextMenu.Items.Add(rdpModeItem);
 
             contextMenu.Items.Add(new ToolStripSeparator());
 
@@ -121,8 +188,21 @@ namespace RemOSK.Services
                 System.Windows.Application.Current.Shutdown();
             });
 
+            // Workaround for context menu appearing behind other windows
+            contextMenu.Opening += (s, e) =>
+            {
+                // Force foreground when opening
+                SetForegroundWindow(GetForegroundWindow());
+            };
+            
             _notifyIcon.ContextMenuStrip = contextMenu;
         }
+        
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+        
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
 
         private void SwitchLayout(string layoutName)
         {
