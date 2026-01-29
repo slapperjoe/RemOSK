@@ -14,6 +14,7 @@ namespace RemOSK.Views
     {
         private DispatcherTimer _updateTimer;
         private bool _isEnabled;
+        private bool _hasPositionSet;
 
         // Win32 APIs for getting cursor position and making window click-through
         [DllImport("user32.dll")]
@@ -92,17 +93,27 @@ namespace RemOSK.Views
             
             Console.WriteLine($"[CursorOverlay] Using screen bounds: {_screenWidth}x{_screenHeight} (detected: {screenWidth}x{screenHeight})");
             
-            // Always start at CENTER of visible screen
-            _cursorX = _screenWidth / 2;
-            _cursorY = _screenHeight / 2;
+            // Always start at CENTER of visible screen ONLY if not set yet
+            if (!_hasPositionSet)
+            {
+                _cursorX = _screenWidth / 2;
+                _cursorY = _screenHeight / 2;
+                _hasPositionSet = true;
+                Console.WriteLine($"[CursorOverlay] Started at center: {_cursorX},{_cursorY}");
+            }
+            else
+            {
+                // Verify bounds are still valid (e.g. resolution change)
+                _cursorX = Math.Max(0, Math.Min(_screenWidth - 1, _cursorX));
+                _cursorY = Math.Max(0, Math.Min(_screenHeight - 1, _cursorY));
+                Console.WriteLine($"[CursorOverlay] Resuming at: {_cursorX},{_cursorY}");
+            }
             
             this.Left = _cursorX;
             this.Top = _cursorY;
             this.Show();
             // NOTE: Do NOT call Activate() - it steals focus from other apps
             this.Topmost = true;
-            
-            Console.WriteLine($"[CursorOverlay] Started at center: {_cursorX},{_cursorY}");
             
             _updateTimer.Start();
         }
@@ -133,8 +144,9 @@ namespace RemOSK.Views
             // The manager calls InputInjector.SendMouseMoveTo() which handles the actual system move
             // and ensures cursor shape updates work correctly via the input stack.
             
-            // Update shape (optimization: update local shape based on system state at this new pos)
-            UpdateCursorShape();
+            // Force update shape by simulating messages to target window
+            // This works around OS suppression of mouse events during touch
+            ForceCursorUpdate();
         }
         
         [DllImport("user32.dll", SetLastError = true)]
@@ -234,6 +246,52 @@ namespace RemOSK.Views
                 // Default to arrow
                 ArrowCursor.Visibility = Visibility.Visible;
             }
+        }
+
+        // --- Alternative Cursor Fix Logic ---
+        
+        [DllImport("user32.dll")]
+        private static extern IntPtr WindowFromPoint(POINT Point);
+
+        [DllImport("user32.dll")]
+        private static extern bool ScreenToClient(IntPtr hWnd, ref POINT lpPoint);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        
+        [DllImport("user32.dll")]
+        private static extern int MakeLParam(int LoWord, int HiWord);
+
+        private const int WM_SETCURSOR = 0x0020;
+        private const int WM_MOUSEMOVE = 0x0200;
+        private const int HTCLIENT = 1;
+
+        public void ForceCursorUpdate()
+        {
+            // Find window under cursor
+            var pt = new POINT { X = (int)_cursorX, Y = (int)_cursorY };
+            IntPtr hWnd = WindowFromPoint(pt);
+            
+            if (hWnd != IntPtr.Zero)
+            {
+                // 1. Send WM_SETCURSOR to ask the window to set its cursor
+                // wParam: handle to window
+                // lParam: hit-test code (low) + message ID (high)
+                IntPtr lParam = (IntPtr)((HTCLIENT) | (WM_MOUSEMOVE << 16));
+                SendMessage(hWnd, WM_SETCURSOR, hWnd, lParam);
+                
+                // 2. Post WM_MOUSEMOVE to ensure it processes movement (triggers hover effects etc)
+                // Convert to client coords
+                ScreenToClient(hWnd, ref pt);
+                IntPtr mousePos = (IntPtr)((pt.Y << 16) | (pt.X & 0xFFFF));
+                PostMessage(hWnd, WM_MOUSEMOVE, IntPtr.Zero, mousePos);
+            }
+            
+            // Now update our local shape based on what the system thinks
+            UpdateCursorShape();
         }
     }
 }

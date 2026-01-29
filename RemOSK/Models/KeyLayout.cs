@@ -16,6 +16,10 @@ namespace RemOSK.Models
         public double X { get; set; } = -1; // -1 means use Grid (Column)
         public double Y { get; set; } = -1; // -1 means use Grid (Row)
         
+        // Fine-grained offsets relative to Grid position
+        public double XOffset { get; set; } = 0;
+        public double YOffset { get; set; } = 0;
+        
         public bool IsHalfSplit { get; set; } // If true, belongs to Right half? Or we define separate arrays?
     }
 

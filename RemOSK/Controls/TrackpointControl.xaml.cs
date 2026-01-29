@@ -164,9 +164,7 @@ namespace RemOSK.Controls
             }
         }
         
-        // Events for mouse button clicks (triggered by tap/hold gestures)
-        public event EventHandler? OnLeftClick;
-        public event EventHandler? OnRightClick;
+
     }
 }
 

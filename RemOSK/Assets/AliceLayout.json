@@ -2,196 +2,357 @@
     "Name": "Alice (Combined)",
     "LeftKeys": [
         {
+            "Label": "1",
+            "VirtualKeyCode": 49,
+            "Column": 0,
+            "Row": 0,
+            "YOffset": 20
+        },
+        {
+            "Label": "2",
+            "VirtualKeyCode": 50,
+            "Column": 1,
+            "Row": 0,
+            "YOffset": 5
+        },
+        {
+            "Label": "3",
+            "VirtualKeyCode": 51,
+            "Column": 2,
+            "Row": 0,
+            "YOffset": 0
+        },
+        {
+            "Label": "4",
+            "VirtualKeyCode": 52,
+            "Column": 3,
+            "Row": 0,
+            "YOffset": 10
+        },
+        {
+            "Label": "5",
+            "VirtualKeyCode": 53,
+            "Column": 4,
+            "Row": 0,
+            "Rotation": 5,
+            "X": 230,
+            "Y": 25
+        },
+        {
             "Label": "Q",
             "VirtualKeyCode": 81,
             "Column": 0,
-            "Row": 0
+            "Row": 1,
+            "YOffset": 20
         },
         {
             "Label": "W",
             "VirtualKeyCode": 87,
             "Column": 1,
-            "Row": 0
+            "Row": 1,
+            "YOffset": 5
         },
         {
             "Label": "E",
             "VirtualKeyCode": 69,
             "Column": 2,
-            "Row": 0
+            "Row": 1,
+            "YOffset": 0
         },
         {
             "Label": "R",
             "VirtualKeyCode": 82,
             "Column": 3,
-            "Row": 0
+            "Row": 1,
+            "YOffset": 10
         },
         {
             "Label": "T",
             "VirtualKeyCode": 84,
             "Column": 4,
-            "Row": 0,
+            "Row": 1,
             "Rotation": 5,
             "X": 230,
-            "Y": 15
+            "Y": 80
         },
         {
             "Label": "A",
             "VirtualKeyCode": 65,
             "Column": 0,
-            "Row": 1
+            "Row": 2,
+            "YOffset": 20
         },
         {
             "Label": "S",
             "VirtualKeyCode": 83,
             "Column": 1,
-            "Row": 1
+            "Row": 2,
+            "YOffset": 5
         },
         {
             "Label": "D",
             "VirtualKeyCode": 68,
             "Column": 2,
-            "Row": 1
+            "Row": 2,
+            "YOffset": 0
         },
         {
             "Label": "F",
             "VirtualKeyCode": 70,
             "Column": 3,
-            "Row": 1
+            "Row": 2,
+            "YOffset": 10
         },
         {
             "Label": "G",
             "VirtualKeyCode": 71,
             "Column": 4,
-            "Row": 1,
+            "Row": 2,
             "Rotation": 5,
             "X": 235,
-            "Y": 70
+            "Y": 135
         },
         {
             "Label": "Z",
             "VirtualKeyCode": 90,
             "Column": 0,
-            "Row": 2
+            "Row": 3,
+            "YOffset": 20
         },
         {
             "Label": "X",
             "VirtualKeyCode": 88,
             "Column": 1,
-            "Row": 2
+            "Row": 3,
+            "YOffset": 5
         },
         {
             "Label": "C",
             "VirtualKeyCode": 67,
             "Column": 2,
-            "Row": 2
+            "Row": 3,
+            "YOffset": 0
         },
         {
             "Label": "V",
             "VirtualKeyCode": 86,
             "Column": 3,
-            "Row": 2
+            "Row": 3,
+            "YOffset": 10
         },
         {
             "Label": "B",
             "VirtualKeyCode": 66,
             "Column": 4,
-            "Row": 2,
+            "Row": 3,
             "Rotation": 5,
             "X": 240,
-            "Y": 125
+            "Y": 190
+        },
+        {
+            "Label": "Space",
+            "VirtualKeyCode": 32,
+            "Column": 3,
+            "Row": 4,
+            "X": 160,
+            "Y": 230,
+            "Rotation": 10,
+            "WidthUnits": 2.5
         }
     ],
     "RightKeys": [
         {
-            "Label": "Y",
-            "VirtualKeyCode": 89,
+            "Label": "6",
+            "VirtualKeyCode": 54,
             "Column": 0,
             "Row": 0,
             "Rotation": -5,
             "X": 10,
-            "Y": 15
+            "Y": 25
+        },
+        {
+            "Label": "7",
+            "VirtualKeyCode": 55,
+            "Column": 1,
+            "Row": 0,
+            "YOffset": 10
+        },
+        {
+            "Label": "8",
+            "VirtualKeyCode": 56,
+            "Column": 2,
+            "Row": 0,
+            "YOffset": 0
+        },
+        {
+            "Label": "9",
+            "VirtualKeyCode": 57,
+            "Column": 3,
+            "Row": 0,
+            "YOffset": 5
+        },
+        {
+            "Label": "0",
+            "VirtualKeyCode": 48,
+            "Column": 4,
+            "Row": 0,
+            "YOffset": 20
+        },
+        {
+            "Label": "-",
+            "VirtualKeyCode": 189,
+            "Column": 5,
+            "Row": 0,
+            "YOffset": 25
+        },
+        {
+            "Label": "=",
+            "VirtualKeyCode": 187,
+            "Column": 6,
+            "Row": 0,
+            "YOffset": 25
+        },
+        {
+            "Label": "Y",
+            "VirtualKeyCode": 89,
+            "Column": 0,
+            "Row": 1,
+            "Rotation": -5,
+            "X": 10,
+            "Y": 80
         },
         {
             "Label": "U",
             "VirtualKeyCode": 85,
             "Column": 1,
-            "Row": 0,
-            "X": 70,
-            "Y": 10
+            "Row": 1,
+            "YOffset": 10
         },
         {
             "Label": "I",
             "VirtualKeyCode": 73,
             "Column": 2,
-            "Row": 0,
-            "X": 125,
-            "Y": 10
+            "Row": 1,
+            "YOffset": 0
         },
         {
             "Label": "O",
             "VirtualKeyCode": 79,
             "Column": 3,
-            "Row": 0,
-            "X": 180,
-            "Y": 10
+            "Row": 1,
+            "YOffset": 5
         },
         {
             "Label": "P",
             "VirtualKeyCode": 80,
             "Column": 4,
-            "Row": 0,
-            "X": 235,
-            "Y": 10
+            "Row": 1,
+            "YOffset": 20
+        },
+        {
+            "Label": "[",
+            "VirtualKeyCode": 219,
+            "Column": 5,
+            "Row": 1,
+            "YOffset": 25
+        },
+        {
+            "Label": "]",
+            "VirtualKeyCode": 221,
+            "Column": 6,
+            "Row": 1,
+            "YOffset": 25
         },
         {
             "Label": "H",
             "VirtualKeyCode": 72,
             "Column": 0,
-            "Row": 1,
+            "Row": 2,
             "Rotation": -5,
             "X": 15,
-            "Y": 70
+            "Y": 135
         },
         {
             "Label": "J",
             "VirtualKeyCode": 74,
             "Column": 1,
-            "Row": 1,
-            "X": 75,
-            "Y": 65
+            "Row": 2,
+            "YOffset": 10
         },
         {
             "Label": "K",
             "VirtualKeyCode": 75,
             "Column": 2,
-            "Row": 1,
-            "X": 130,
-            "Y": 65
+            "Row": 2,
+            "YOffset": 0
         },
         {
             "Label": "L",
             "VirtualKeyCode": 76,
             "Column": 3,
-            "Row": 1,
-            "X": 185,
-            "Y": 65
+            "Row": 2,
+            "YOffset": 5
+        },
+        {
+            "Label": ";",
+            "VirtualKeyCode": 186,
+            "Column": 4,
+            "Row": 2,
+            "YOffset": 20
+        },
+        {
+            "Label": "'",
+            "VirtualKeyCode": 222,
+            "Column": 5,
+            "Row": 2,
+            "YOffset": 25
         },
         {
             "Label": "N",
             "VirtualKeyCode": 78,
             "Column": 0,
-            "Row": 2,
+            "Row": 3,
             "Rotation": -5,
-            "X": 20,
-            "Y": 125
+            "X": 25,
+            "Y": 190
         },
         {
             "Label": "M",
             "VirtualKeyCode": 77,
             "Column": 1,
-            "Row": 2,
-            "X": 80,
-            "Y": 120
+            "Row": 3,
+            "YOffset": 10
+        },
+        {
+            "Label": ",",
+            "VirtualKeyCode": 188,
+            "Column": 2,
+            "Row": 3,
+            "YOffset": 0
+        },
+        {
+            "Label": ".",
+            "VirtualKeyCode": 190,
+            "Column": 3,
+            "Row": 3,
+            "YOffset": 5
+        },
+        {
+            "Label": "/",
+            "VirtualKeyCode": 191,
+            "Column": 4,
+            "Row": 3,
+            "YOffset": 20
+        },
+        {
+            "Label": "Space",
+            "VirtualKeyCode": 32,
+            "Column": 0,
+            "Row": 4,
+            "X": 25,
+            "Y": 245,
+            "Rotation": -10,
+            "WidthUnits": 2.5
         }
     ]
 }

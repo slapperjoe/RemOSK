@@ -168,6 +168,13 @@
             "Row": 4,
             "Column": 2.5,
             "WidthUnits": 1.25
+        },
+        {
+            "Label": "Space",
+            "VirtualKeyCode": 32,
+            "Row": 4,
+            "Column": 3.75,
+            "WidthUnits": 2.25
         }
     ],
     "RightKeys": [

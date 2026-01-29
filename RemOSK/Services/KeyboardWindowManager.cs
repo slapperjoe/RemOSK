@@ -25,6 +25,7 @@ using RemOSK.Models;
         private bool _isFadedOut;
         private const double FADED_OPACITY = 0.3;
         private const double NORMAL_OPACITY = 1.0;
+        private bool _isInteracting;
         
         // Focus tracking - continuously track last "user" window (not tray/system)
         private IntPtr _lastUserForegroundWindow = IntPtr.Zero;
@@ -47,6 +48,8 @@ using RemOSK.Models;
             _focusTrackingTimer.Interval = TimeSpan.FromMilliseconds(100);
             _focusTrackingTimer.Tick += FocusTrackingTimer_Tick;
             _focusTrackingTimer.Start();
+            
+            InitializeTextPreview();
 
             ReloadLayout(_configService.CurrentConfig.LastUsedLayout);
         }
@@ -61,11 +64,7 @@ using RemOSK.Models;
             
             // Debug: Log every 50th check to see what we're seeing
             _focusDebugCounter++;
-            if (_focusDebugCounter % 50 == 0)
-            {
-                Console.WriteLine($"[FOCUS DEBUG] Checking: '{title}' (0x{current:X})");
-            }
-            
+                        
             // Skip our actual RemOSK windows (exact titles) and unknown windows
             // Don't skip VS Code just because it has "RemOSK" in the path!
             bool isOurWindow = title == "RemOSK Keyboard" || 
@@ -233,14 +232,13 @@ using RemOSK.Models;
             }
             
             // Set Initial Position for Left Window
-             if (_configService.CurrentConfig.LeftWindowTop != -1)
-             {
-                 _leftWindow.Top = _configService.CurrentConfig.LeftWindowTop;
-             }
-             else
-             {
-                  _leftWindow.Top = SystemParameters.PrimaryScreenHeight / 2 - (_leftWindow.Height / 2);
-             }
+              // Set Initial Position for Left Window: align to bottom
+              // Set Initial Position for Left Window: align to bottom (WorkArea.Bottom accounts for taskbar)
+             double leftTop = SystemParameters.WorkArea.Bottom - _leftWindow.Height;
+             // Ensure it doesn't go negative (if window is taller than screen?)
+             if (leftTop < 0) leftTop = 0;
+             
+             _leftWindow.Top = leftTop;
 
 
             if (_rightWindow == null)
@@ -248,9 +246,11 @@ using RemOSK.Models;
                 _rightWindow = new KeyboardWindow();
                 
                 // Initial Top Position (Right)
-                double startTop = _configService.CurrentConfig.RightWindowTop;
-                if (startTop == -1) startTop = SystemParameters.PrimaryScreenHeight / 2 - (_rightWindow.Height / 2);
-                _rightWindow.Top = startTop;
+                // Vertical: Force align to bottom (WorkArea.Bottom accounts for taskbar)
+                double rightTop = SystemParameters.WorkArea.Bottom - _rightWindow.Height;
+                if (rightTop < 0) rightTop = 0;
+                
+                _rightWindow.Top = rightTop;
 
                 ((KeyboardWindow)_rightWindow).LoadKeys(_currentLayout.RightKeys, true); // Right Aligned
                 ((KeyboardWindow)_rightWindow).OnKeyPressed += Window_OnKeyPressed;
@@ -405,6 +405,66 @@ using RemOSK.Models;
             // Apply Acrylic State
             UpdateAcrylicState();
             
+            // --- Overlap Prevention & Auto-Scaling ---
+            // "In this scenario when having to move left... also need both... scale smaller until they don't overlap"
+            if (_leftWindow != null && _rightWindow != null)
+            {
+                var lWin = (KeyboardWindow)_leftWindow;
+                var rWin = (KeyboardWindow)_rightWindow;
+                
+                double lScale = _configService.CurrentConfig.LeftUiScale;
+                double rScale = _configService.CurrentConfig.RightUiScale;
+                bool needsRescale = false;
+
+                // Resolve intended Left Target (default to 0 if not set)
+                double finalTargetLeft = 0;
+                if (_configService.CurrentConfig.LeftWindowLeft != -1) 
+                    finalTargetLeft = _configService.CurrentConfig.LeftWindowLeft;
+
+                // Iterative Scaling Step-down (2% per step)
+                // "Go back to the old method and make it 2%"
+                for(int i=0; i<100; i++) 
+                {
+                    double lWidth = lWin.GetExpectedWidth(lScale);
+                    double rWidth = rWin.GetExpectedWidth(rScale);
+                    
+                    // User Intended Right Position
+                    double userRightPos = _configService.CurrentConfig.RightWindowLeft;
+                    
+                    // Clamped Right Position (The "stay on screen" logic)
+                    double clampedRightPos = SystemParameters.PrimaryScreenWidth - rWidth;
+                    
+                    // Effective Right Position: Use User's unless it's off-screen
+                    double effectiveRight = (userRightPos != -1) ? userRightPos : clampedRightPos;
+                    if (effectiveRight + rWidth > SystemParameters.PrimaryScreenWidth)
+                        effectiveRight = SystemParameters.PrimaryScreenWidth - rWidth;
+                        
+                    // Check Overlap
+                    double lRightEdge = finalTargetLeft + lWidth;
+                    
+                    if (lRightEdge > effectiveRight)
+                    {
+                         needsRescale = true;
+                         lScale *= 0.98; // Reduce by 2%
+                         rScale *= 0.98;
+                         
+                         // Safety break for min scale
+                         if (lScale < 0.3 || rScale < 0.3) break; 
+                    }
+                    else
+                    {
+                        break; // Fits!
+                    }
+                }
+                
+                if (needsRescale)
+                {
+                    Console.WriteLine($"[Manager] Overlap detected. Auto-scaled down to L:{lScale:F2}, R:{rScale:F2}");
+                    lWin.SetScale(lScale);
+                    rWin.SetScale(rScale);
+                }
+            }
+
             // Apply Edit Mode State
             UpdateEditMode();
 
@@ -433,6 +493,17 @@ using RemOSK.Models;
                 double targetRight = SystemParameters.PrimaryScreenWidth - right.Width;
                 if (_configService.CurrentConfig.RightWindowLeft != -1) targetRight = _configService.CurrentConfig.RightWindowLeft;
 
+                // Ensure right window is fully on-screen (move left if extending off-screen)
+                if (targetRight + right.Width > SystemParameters.PrimaryScreenWidth)
+                {
+                    targetRight = SystemParameters.PrimaryScreenWidth - right.Width;
+                }
+
+                // Vertical: Force align to bottom (resolution safety & taskbar aware)
+                double forcedTop = SystemParameters.WorkArea.Bottom - right.Height;
+                if (forcedTop < 0) forcedTop = 0;
+                right.Top = forcedTop;
+
                 right.Left = SystemParameters.PrimaryScreenWidth; // Start off-screen
                 right.Show();
                 var rightAnim = new DoubleAnimation(targetRight, TimeSpan.FromMilliseconds(250)) { EasingFunction = new QuadraticEase() };
@@ -445,6 +516,7 @@ using RemOSK.Models;
             }
 
             _isVisible = true;
+            _textPreviewController?.Start();
         }
 
         public void UpdateEditMode()
@@ -455,6 +527,18 @@ using RemOSK.Models;
             
             if (_trackpointWindow != null) ((TrackpointWindow)_trackpointWindow!).SetEditMode(enabled);
             _clickButtonsWindow?.SetEditMode(enabled);
+
+            // Disable inactivity timer in Edit Mode
+            if (enabled)
+            {
+                _inactivityTimer?.Stop();
+                RestoreWindows(); // Ensure we are fully visible while editing
+            }
+            else
+            {
+                _inactivityTimer?.Start();
+                RegisterActivity(); // Reset timer
+            }
         }
 
         public void UpdateAcrylicState()
@@ -523,11 +607,14 @@ using RemOSK.Models;
                     newWin.OnMove += Window_OnTrackpointMove;
                     
                     // Transparency Logic
-                    newWin.OnInteractionStart += (s, e) => SetKeyboardTransparency(0.2);
+                    newWin.OnInteractionStart += (s, e) => 
+                    {
+                        SetKeyboardTransparency(0.2);
+                        RegisterActivity();
+                    };
                     newWin.OnInteractionEnd += (s, e) => SetKeyboardTransparency(1.0);
                     
-                    newWin.OnLeftClick += (s, e) => _inputInjector.SendLeftClick();
-                    newWin.OnRightClick += (s, e) => _inputInjector.SendRightClick();
+
                     
                     // Position persistence
                     newWin.HorizontalPositionChanged += (s, left) =>
@@ -554,6 +641,7 @@ using RemOSK.Models;
                     if (_cursorOverlay == null)
                     {
                         _cursorOverlay = new CursorOverlay();
+                        // _cursorOverlay.OnTextContextAvailable += CursorOverlay_OnTextContextAvailable; // Logic moved to TextPreviewController
                     }
                     
                     _trackpointWindow = newWin;
@@ -593,8 +681,10 @@ using RemOSK.Models;
             }
             
             _trackpointWindow?.Hide();
+            _trackpointWindow?.Hide();
             _cursorOverlay?.DisableOverlay();
             _clickButtonsWindow?.Hide();
+            _textPreviewController?.Stop();
 
             _isVisible = false;
         }
@@ -608,11 +698,14 @@ using RemOSK.Models;
             _rightWindow?.Close();
             _trackpointWindow?.Close();
             _clickButtonsWindow?.Close();
+            _clickButtonsWindow?.Close();
+            _textPreviewController?.Dispose();
             
             _leftWindow = null;
             _rightWindow = null;
             _trackpointWindow = null;
             _clickButtonsWindow = null;
+            _textPreviewController = null;
         }
 
         private void Window_OnKeyPressed(object? sender, RemOSK.Controls.KeyButton e)
@@ -632,12 +725,31 @@ using RemOSK.Models;
             _modifierManager.HandleKey(e.VirtualKeyCode, true);
         }
 
+        private DispatcherTimer? _cursorHideTimer;
+
         private void Window_OnTrackpointMove(object? sender, System.Windows.Vector vector)
         {
             RegisterActivity(); // Reset inactivity timer
             
             // Enable cursor overlay when trackpoint is used
             _cursorOverlay?.EnableOverlay();
+            
+            // Manage Auto-Hide Timer (2 seconds persistence)
+            if (_cursorHideTimer == null)
+            {
+                _cursorHideTimer = new DispatcherTimer();
+                _cursorHideTimer.Interval = TimeSpan.FromSeconds(2);
+                _cursorHideTimer.Tick += (s, e) =>
+                {
+                    _cursorHideTimer.Stop();
+                    // Only hide if we aren't currently interacting (dragging)
+                    // The trackpoint window sends OnInteractionEnd which handles opacity,
+                    // but we manage cursor visibility here to keep it alive a bit longer.
+                    _cursorOverlay?.DisableOverlay();
+                };
+            }
+            _cursorHideTimer.Stop();
+            _cursorHideTimer.Start();
             
             // Move our custom cursor (updates local state)
             if (_cursorOverlay != null)
@@ -651,16 +763,68 @@ using RemOSK.Models;
                 var bounds = _cursorOverlay.ScreenBounds;
                 _inputInjector.SendMouseMoveTo(pos.X, pos.Y, bounds.Width, bounds.Height);
                 
-                // Force shape update
-                _cursorOverlay.UpdateCursorShape();
+                // Force shape update is now handled inside MoveCursor via simulation
+                // _cursorOverlay.UpdateCursorShape();
+            }
+            }
+
+        
+        private TextPreviewController? _textPreviewController;
+
+        public void InitializeTextPreview()
+        {
+            if (_textPreviewController == null)
+            {
+                _textPreviewController = new TextPreviewController(this);
+                _textPreviewController.OnTextPreviewUpdated += (context) => 
+                {
+                    Application.Current.Dispatcher.Invoke(() => 
+                    {
+                        if (_leftWindow != null)
+                        {
+                            ((KeyboardWindow)_leftWindow).UpdatePreviewText(context);
+                        }
+                        if (_rightWindow != null)
+                        {
+                            ((KeyboardWindow)_rightWindow).UpdatePreviewText(context);
+                        }
+                    });
+                };
+                _textPreviewController.OnActivityDetected += () => 
+                {
+                    Dispatcher.CurrentDispatcher.Invoke(() => RegisterActivity());
+                };
+                _textPreviewController.Start();
             }
         }
+        
+        // Old handlers removed
         
         // Inactivity transparency methods
         private void InactivityTimer_Tick(object? sender, EventArgs e)
         {
+            // Safety check: Don't hide if in edit mode
+            if (_configService.CurrentConfig.IsEditModeEnabled)
+            {
+                _inactivityTimer?.Stop(); // Fix state
+                return;
+            }
+
             _inactivityTimer?.Stop();
-            FadeOutWindows();
+            
+            if (!_isFadedOut)
+            {
+                // Stage 1: Fade out
+                FadeOutWindows();
+                // Restart timer for Stage 2 (Hide)
+                _inactivityTimer?.Start();
+            }
+            else
+            {
+                // Stage 2: Hide (Slide off)
+                Console.WriteLine("[Manager] Auto-hiding windows due to extended inactivity");
+                Hide();
+            }
         }
         
         /// <summary>
@@ -675,7 +839,16 @@ using RemOSK.Models;
             // If faded, restore opacity and return true to indicate this touch should be consumed
             if (_isFadedOut)
             {
-                RestoreWindows();
+                if (!_isInteracting)
+                {
+                    RestoreWindows();
+                }
+                else
+                {
+                    // If interacting, we are "awake" but keeping low opacity
+                    // Just clear the faded flag so we don't fade out again immediately
+                    _isFadedOut = false;
+                }
                 return true; // Consume this touch - it was just to wake up
             }
             return false; // Normal touch, don't consume
@@ -728,6 +901,8 @@ using RemOSK.Models;
         public void SetKeyboardTransparency(double opacity)
         {
             if (_isFadedOut) return; // Don't override fade-out
+            
+            _isInteracting = (opacity < 1.0);
             
             _leftWindow?.Dispatcher.Invoke(() => _leftWindow.Opacity = opacity);
             _rightWindow?.Dispatcher.Invoke(() => _rightWindow.Opacity = opacity);

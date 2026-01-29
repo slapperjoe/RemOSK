@@ -47,30 +47,52 @@ namespace RemOSK.Services
         private IntPtr _hwnd;
         private HwndSource? _hwndSource;
         private bool _isTracking;
+        public bool IsRegistered { get; private set; } // Track registration success
         private int _lastX;
         private int _lastY;
         private int _trackingId = -1;
 
         public event EventHandler<Vector>? OnRelativeMove;
+        public event EventHandler<Point>? OnAbsolutePosition;
         public event EventHandler? OnTouchDown;
         public event EventHandler? OnTouchUp;
 
         public void Attach(Window window)
         {
-            window.SourceInitialized += (s, e) =>
+            if (PresentationSource.FromVisual(window) != null)
             {
-                var helper = new WindowInteropHelper(window);
-                _hwnd = helper.Handle;
-                
-                // Register for WM_TOUCH - no TWF flags means we get raw touch without mouse conversion
-                RegisterTouchWindow(_hwnd, 0);
-                
-                // Hook into WndProc
-                _hwndSource = HwndSource.FromHwnd(_hwnd);
-                _hwndSource?.AddHook(WndProc);
-                
-                Console.WriteLine($"[RawTouchHandler] Attached to {window.Title}");
-            };
+                // Already initialized
+                SetupHook(window);
+            }
+            else
+            {
+                window.SourceInitialized += (s, e) => SetupHook(window);
+            }
+        }
+
+        private void SetupHook(Window window)
+        {
+            var helper = new WindowInteropHelper(window);
+            _hwnd = helper.Handle;
+            
+            // Register for WM_TOUCH - use WANTPALM to ensure we get everything
+            // 0x00000002 = TWF_WANTPALM
+            bool result = RegisterTouchWindow(_hwnd, 2); 
+            if (!result)
+            {
+                 int err = Marshal.GetLastWin32Error();
+                 Console.WriteLine($"[RawTouchHandler] RegisterTouchWindow failed! Error: {err}");
+                 IsRegistered = false;
+            }
+            else
+            {
+                 Console.WriteLine($"[RawTouchHandler] Attached to {window.Title} (RegisterTouchWindow Success)");
+                 IsRegistered = true;
+            }
+            
+            // Hook into WndProc
+            _hwndSource = HwndSource.FromHwnd(_hwnd);
+            _hwndSource?.AddHook(WndProc);
         }
 
         public void Detach()
@@ -89,6 +111,7 @@ namespace RemOSK.Services
 
                 if (GetTouchInputInfo(lParam, touchCount, inputs, structSize))
                 {
+                    // Console.WriteLine($"[RawTouch] Got {touchCount} inputs");
                     foreach (var input in inputs)
                     {
                         // Convert from 100ths of a pixel to pixels
@@ -97,6 +120,7 @@ namespace RemOSK.Services
 
                         if ((input.dwFlags & TOUCHEVENTF_DOWN) != 0)
                         {
+                            Console.WriteLine($"[RawTouch] DOWN id={input.dwID} x={x} y={y}");
                             // Touch down - start tracking
                             _isTracking = true;
                             _trackingId = input.dwID;
@@ -114,11 +138,14 @@ namespace RemOSK.Services
 
                             if (Math.Abs(deltaX) > 0 || Math.Abs(deltaY) > 0)
                             {
+                                // Console.WriteLine($"[RawTouch] MOVE dx={deltaX} dy={deltaY}");
                                 OnRelativeMove?.Invoke(this, new Vector(deltaX * 1.5, deltaY * 1.5));
+                                OnAbsolutePosition?.Invoke(this, new Point(x, y));
                             }
                         }
                         else if ((input.dwFlags & TOUCHEVENTF_UP) != 0 && input.dwID == _trackingId)
                         {
+                            Console.WriteLine($"[RawTouch] UP id={input.dwID}");
                             // Touch up - stop tracking
                             _isTracking = false;
                             _trackingId = -1;
@@ -130,6 +157,10 @@ namespace RemOSK.Services
                     
                     // Mark as handled to PREVENT Windows from generating mouse events
                     handled = true;
+                }
+                else
+                {
+                    Console.WriteLine($"[RawTouch] GetTouchInputInfo failed: {Marshal.GetLastWin32Error()}");
                 }
             }
 

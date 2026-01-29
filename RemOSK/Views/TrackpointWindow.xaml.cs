@@ -9,8 +9,7 @@ namespace RemOSK.Views
     public partial class TrackpointWindow : DraggableWindow
     {
         public event EventHandler<System.Windows.Vector>? OnMove;
-        public event EventHandler? OnLeftClick;
-        public event EventHandler? OnRightClick;
+
         
         public event EventHandler? OnInteractionStart;
         public event EventHandler? OnInteractionEnd;
@@ -35,50 +34,37 @@ namespace RemOSK.Views
             // Detach old handler if any
             _rawTouchHandler?.Detach();
             _rawTouchHandler = null;
-            
             if (mode == "Trackpad")
             {
                 _baseWidth = 250;
                 _baseHeight = 200;
+                MainBorder.CornerRadius = new CornerRadius(15);
                 
-                // Use RawTouchHandler for raw WM_TOUCH processing
-                // This prevents Windows from moving cursor to touch position
-                _rawTouchHandler = new RawTouchHandler();
-                _rawTouchHandler.Attach(this);
-                _rawTouchHandler.OnRelativeMove += (s, v) => OnMove?.Invoke(this, v);
-                
-                // Create trackpad control for visual display and buttons only
+                // Visuals Only
                 var pad = new TrackpadControl();
-                pad.OnLeftClick += (s, e) => OnLeftClick?.Invoke(this, e);
-                pad.OnRightClick += (s, e) => OnRightClick?.Invoke(this, e);
                 InputContainer.Content = pad;
             }
             else // Trackpoint or Fallback
             {
                 _baseWidth = 100;
                 _baseHeight = 100;
-                
-                // Use RawTouchHandler for Trackpoint too - bypasses WPF touch issues
-                _rawTouchHandler = new RawTouchHandler();
-                _rawTouchHandler.Attach(this);
-                
-                // For trackpoint, we want CONTINUOUS movement based on distance from center
-                // The RawTouchHandler gives us absolute position, so we calculate offset from center
-                _rawTouchHandler.OnTouchDown += (s, e) => Console.WriteLine("[TrackpointWindow] Raw touch down");
-                _rawTouchHandler.OnTouchUp += (s, e) => Console.WriteLine("[TrackpointWindow] Raw touch up");
-                _rawTouchHandler.OnRelativeMove += HandleTrackpointMove;
+                MainBorder.CornerRadius = new CornerRadius(50);
                 
                 _trackpointControl = new TrackpointControl();
                 
                 // Wire up click events
-                _trackpointControl.OnLeftClick += (s, e) => OnLeftClick?.Invoke(this, e);
-                _trackpointControl.OnRightClick += (s, e) => OnRightClick?.Invoke(this, e);
+
                 
                 _trackpointControl.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
                 _trackpointControl.VerticalAlignment = System.Windows.VerticalAlignment.Center;
                 
                 InputContainer.Content = _trackpointControl;
             }
+            
+            // Disable RawTouchHandler for now as it causes regression (swallows inputs)
+            // _rawTouchHandler = new RawTouchHandler();
+            // _rawTouchHandler.Attach(this);
+            // ...
             
             // Apply current scale to new base dimensions
             SetScale(_currentScale);
@@ -100,11 +86,7 @@ namespace RemOSK.Views
         }
         // ------------------
         
-        private void HandleTrackpointMove(object? sender, System.Windows.Vector v)
-        {
-            // Forward to OnMove - RawTouchHandler handles the relative movement
-            OnMove?.Invoke(this, v);
-        }
+
 
         protected override void OnEditModeChanged(bool enabled)
         {
@@ -116,47 +98,57 @@ namespace RemOSK.Views
             MainBorder.BorderThickness = new Thickness(enabled ? 3 : 2);
             
             // Logic
+            // Logic
             InputContainer.Visibility = enabled ? Visibility.Hidden : Visibility.Visible;
+            
+            if (enabled)
+            {
+                // Edit Mode: Detach raw handler to let WPF/DraggableWindow handle moves
+                _rawTouchHandler?.Detach();
+                // Don't null it, just detach so we can re-attach
+                // Actually, Detach removes hook. We need to re-hook later.
+            }
+            else
+            {
+                // Normal Mode: Re-attach raw handler
+                _rawTouchHandler?.Attach(this);
+            }
         }
 
-        // Window-level touch handlers for Trackpoint mode
+        // Shared touch state
         private TouchDevice? _windowCapturedTouch;
-        private System.Windows.Point _windowTouchCenter;
+        private Point _lastTouchPosition;
         private bool _windowTouchActive;
+        
+        // Trackpoint specific (Timer-based)
+        private System.Windows.Point _windowTouchCenter;
         private System.Windows.Threading.DispatcherTimer? _trackpointTimer;
         private System.Windows.Vector _currentTrackpointVector;
         
         private void Window_PreviewTouchDown(object sender, TouchEventArgs e)
         {
-            Console.WriteLine("[Window] PreviewTouchDown");
-            
-            // In edit mode, don't handle as trackpoint - let manipulation events handle it
+            // In edit mode / drag mode, let manipulation/WPF events handle it
             if (_isEditModeEnabled) return;
             
-            if (_currentMode == "Trackpoint" && !_windowTouchActive)
+            // Priority: RawTouchHandler (Disabled due to regression)
+            // if (_rawTouchHandler != null && _rawTouchHandler.IsRegistered) { ... }
+
+            // Fallback: WPF Touch Logic
+            if (!_windowTouchActive)
             {
                 _windowTouchActive = true;
                 _windowCapturedTouch = e.TouchDevice;
-                
-                // Trackpoint center is always center of current window size (which might be scaled)
-                _windowTouchCenter = new System.Windows.Point(this.ActualWidth / 2, this.ActualHeight / 2);
+                _lastTouchPosition = e.GetTouchPoint(this).Position;
                 
                 OnInteractionStart?.Invoke(this, EventArgs.Empty);
-
                 e.TouchDevice.Capture(this);
                 
-                // Start timer for continuous movement
-                if (_trackpointTimer == null)
+                if (_currentMode == "Trackpoint")
                 {
-                    _trackpointTimer = new System.Windows.Threading.DispatcherTimer();
-                    _trackpointTimer.Interval = TimeSpan.FromMilliseconds(16);
-                    _trackpointTimer.Tick += TrackpointTimer_Tick;
+                    _windowTouchCenter = new System.Windows.Point(this.ActualWidth / 2, this.ActualHeight / 2);
+                    StartTrackpointTimer();
+                    _currentTrackpointVector = _lastTouchPosition - _windowTouchCenter;
                 }
-                _trackpointTimer.Start();
-                
-                // Calculate initial vector
-                var touchPos = e.GetTouchPoint(this).Position;
-                _currentTrackpointVector = touchPos - _windowTouchCenter;
                 
                 e.Handled = true;
             }
@@ -164,78 +156,166 @@ namespace RemOSK.Views
         
         private void Window_PreviewTouchMove(object sender, TouchEventArgs e)
         {
-            if (_currentMode == "Trackpoint" && _windowTouchActive && e.TouchDevice == _windowCapturedTouch)
-            {
-                var touchPos = e.GetTouchPoint(this).Position;
+             if (_isEditModeEnabled) return;
+             // if (_rawTouchHandler != null && _rawTouchHandler.IsRegistered) 
+             // {
+             //     e.Handled = true;
+             //     return;
+             // }
+
+             // Fallback Logic
+             if (_windowTouchActive && e.TouchDevice == _windowCapturedTouch)
+             {
+                var currentPos = e.GetTouchPoint(this).Position;
                 
-                // Only move if touch is inside the window
-                if (touchPos.X >= 0 && touchPos.X <= this.ActualWidth &&
-                    touchPos.Y >= 0 && touchPos.Y <= this.ActualHeight)
+                if (_currentMode == "Trackpoint")
                 {
-                    _currentTrackpointVector = touchPos - _windowTouchCenter;
+                    bool inside = currentPos.X >= 0 && currentPos.X <= this.ActualWidth &&
+                                  currentPos.Y >= 0 && currentPos.Y <= this.ActualHeight;
+                    if (inside)
+                    {
+                        _currentTrackpointVector = currentPos - _windowTouchCenter;
+                    }
+                    else
+                    {
+                        _currentTrackpointVector = new System.Windows.Vector(0, 0);
+                    }
                 }
-                else
+                else if (_currentMode == "Trackpad")
                 {
-                    // Touch went outside - stop movement
-                    _currentTrackpointVector = new System.Windows.Vector(0, 0);
+                    var delta = currentPos - _lastTouchPosition;
+                    if (delta.Length > 0)
+                    {
+                        OnMove?.Invoke(this, delta * 1.5);
+                        _lastTouchPosition = currentPos;
+                    }
                 }
                 e.Handled = true;
-            }
+             }
         }
         
         private void Window_PreviewTouchUp(object sender, TouchEventArgs e)
         {
-            Console.WriteLine("[Window] PreviewTouchUp");
-            if (_currentMode == "Trackpoint" && e.TouchDevice == _windowCapturedTouch)
-            {
+             if (_isEditModeEnabled) return;
+             // if (_rawTouchHandler != null && _rawTouchHandler.IsRegistered) 
+             // {
+             //     e.Handled = true;
+             //     return;
+             // }
+
+             // Fallback Logic
+             if (e.TouchDevice == _windowCapturedTouch)
+             {
                 _windowTouchActive = false;
-                _trackpointTimer?.Stop();
                 _windowCapturedTouch = null;
-                _currentTrackpointVector = new System.Windows.Vector(0, 0);
                 
-                // Reset stick visual to center
-                _trackpointControl?.ResetStickVisual();
+                if (_currentMode == "Trackpoint")
+                {
+                    StopTrackpointTimer();
+                    _currentTrackpointVector = new System.Windows.Vector(0, 0);
+                    _trackpointControl?.ResetStickVisual();
+                }
                 
                 OnInteractionEnd?.Invoke(this, EventArgs.Empty);
-
                 this.ReleaseTouchCapture(e.TouchDevice);
                 e.Handled = true;
+             }
+        }
+
+        // --- Raw Touch Handler Events ---
+
+        private void OnRawTouchDown(object? sender, EventArgs e)
+        {
+            _windowTouchActive = true;
+            OnInteractionStart?.Invoke(this, EventArgs.Empty);
+
+            if (_currentMode == "Trackpoint")
+            {
+               StartTrackpointTimer();
             }
         }
-        
+
+        private void OnRawTouchUp(object? sender, EventArgs e)
+        {
+            _windowTouchActive = false;
+            OnInteractionEnd?.Invoke(this, EventArgs.Empty);
+            
+            if (_currentMode == "Trackpoint")
+            {
+                StopTrackpointTimer();
+                _currentTrackpointVector = new System.Windows.Vector(0, 0);
+                _trackpointControl?.ResetStickVisual();
+            }
+        }
+
+        private void OnRawRelativeMove(object? sender, System.Windows.Vector delta)
+        {
+            if (_currentMode == "Trackpad")
+            {
+                 OnMove?.Invoke(this, delta);
+            }
+        }
+
+        private void OnRawAbsolutePosition(object? sender, Point screenPos)
+        {
+            if (_currentMode == "Trackpoint")
+            {
+                // Convert Screen to Client to get Vector from Center
+                 var clientPos = this.PointFromScreen(screenPos);
+                 var center = new Point(this.ActualWidth / 2, this.ActualHeight / 2);
+                 
+                 // Check if inside window (should be, but RawTouch captures whole window)
+                 // RawTouchHandler doesn't clamp to client area, but if we are touching the window we are good.
+                 
+                 _currentTrackpointVector = clientPos - center;
+                 
+                 // Update visual immediately? No, Timer handles it for joystick feel
+            }
+        }
+
+        private void StartTrackpointTimer()
+        {
+            if (_trackpointTimer == null)
+            {
+                _trackpointTimer = new System.Windows.Threading.DispatcherTimer();
+                _trackpointTimer.Interval = TimeSpan.FromMilliseconds(16);
+                _trackpointTimer.Tick += TrackpointTimer_Tick;
+            }
+            _trackpointTimer.Start();
+        }
+
+        private void StopTrackpointTimer()
+        {
+            _trackpointTimer?.Stop();
+        }
+
         private void TrackpointTimer_Tick(object? sender, EventArgs e)
         {
-            if (_windowTouchActive && _currentTrackpointVector.Length > 3)
+            if (_windowTouchActive && _currentTrackpointVector.Length > 0.1) // Lower threshold
             {
-                // Calculate movement based on distance from center
                 var v = _currentTrackpointVector;
-                
-                // Update stick visual to show direction
                 _trackpointControl?.UpdateStickVisual(v);
                 
-                // Scale: further from center = MUCH faster movement (3x increase)
-                // Max window radius is about 60px, so scale from 3px to 60px
                 double distanceFromCenter = v.Length;
-                double speed = Math.Min(distanceFromCenter / 5.0, 15.0); // Speed multiplier 0-15 (was 0-5)
                 
-                if (v.Length > 0.1)
+                // Deadzone
+                if (distanceFromCenter < 5.0) 
+                {
+                     return; 
+                }
+
+                // Joystick Math
+                double speed = Math.Min((distanceFromCenter - 5.0) / 4.0, 25.0); // 5px deadzone, then linear speed up to max 25
+                
+                if (speed > 0)
                 {
                     v.Normalize();
                     v *= speed;
+                    OnMove?.Invoke(this, v);
                 }
-                
-                // Log occasionally to verify timer is working
-                if (DateTime.Now.Millisecond < 30)
-                {
-                    Console.WriteLine($"[Trackpoint] Moving: dx={v.X:F1} dy={v.Y:F1} speed={speed:F1}");
-                }
-                
-                // Send the movement
-                OnMove?.Invoke(this, v);
             }
             else if (!_windowTouchActive)
             {
-                // Reset stick when not active
                 _trackpointControl?.ResetStickVisual();
             }
         }

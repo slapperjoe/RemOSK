@@ -55,8 +55,14 @@ namespace RemOSK.Views
 
         public void OnModifierStateChanged(ModifierStateManager manager)
         {
-            UpdateKeyHighlight(160, manager.IsShiftActive); // LShift
-            UpdateKeyHighlight(161, manager.IsShiftActive); // RShift
+            // Shift - Special handling for Locked state
+            var shiftColor = manager.IsShiftLocked ? 
+                             new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 140, 0)) : // DarkOrange for Locked
+                             (manager.IsShiftActive ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(100, 100, 200)) : // Blue for Active
+                                                      new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(51, 51, 51))); // Gray for Normal
+
+            if (_keyMap.TryGetValue(160, out var lShift)) lShift.Background = shiftColor;
+            if (_keyMap.TryGetValue(161, out var rShift)) rShift.Background = shiftColor;
             
             UpdateKeyHighlight(162, manager.IsCtrlActive);  // LCtrl
             UpdateKeyHighlight(163, manager.IsCtrlActive);  // RCtrl
@@ -116,6 +122,12 @@ namespace RemOSK.Views
 
              double newWidth = (_unscaledWidth + 10) * _currentScale + 20;
              double newHeight = (_unscaledHeight + 10) * _currentScale + 20;
+             
+             // Measure preview with constrained width
+             // It has fixed height in XAML (64) + padding (4) + margin (4) approx
+             // We can just rely on DesiredSize
+             PreviewBorder.Measure(new Size(newWidth - 20, double.PositiveInfinity));
+             newHeight += PreviewBorder.DesiredSize.Height + 5; // +5 for margin/separator
 
              // If Right Aligned, we must adjust Left to keep the Right Edge fixed
              if (_isRightAligned)
@@ -166,9 +178,9 @@ namespace RemOSK.Views
                 }
                 else
                 {
-                    // Grid positioning
-                    left = key.Column * 55 + 10;
-                    top = key.Row * 55 + 10;
+                    // Grid positioning with Offsets
+                    left = key.Column * 55 + 10 + key.XOffset;
+                    top = key.Row * 55 + 10 + key.YOffset;
                 }
                 
                 Canvas.SetLeft(btn, left); 
@@ -238,6 +250,25 @@ namespace RemOSK.Views
             foreach (var btn in _keyMap.Values)
             {
                 btn.Label = KeyLabelHelper.GetLabel(btn.BaseLabel, shift, caps);
+            }
+        }
+        
+        public void UpdatePreviewText(RemOSK.Services.TextContextService.TextContext? context)
+        {
+            if (context != null)
+            {
+                // Insert cursor marker at the cursor position
+                string displayText = context.Text;
+                if (context.CursorPosition >= 0 && context.CursorPosition <= displayText.Length)
+                {
+                    // Insert a visual cursor indicator (yellow pipe character)
+                    displayText = displayText.Insert(context.CursorPosition, "█");
+                }
+                PreviewText.Text = displayText;
+            }
+            else
+            {
+                PreviewText.Text = "Waiting for text focus...";
             }
         }
 

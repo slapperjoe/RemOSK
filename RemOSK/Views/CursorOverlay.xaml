@@ -28,21 +28,28 @@
         </Path>
         
         <!-- Text caret cursor (I-beam) -->
-        <Path x:Name="TextCursor" Fill="#FFFF00" Stroke="Black" StrokeThickness="1.5" Visibility="Collapsed">
-            <Path.Data>
-                <PathGeometry>
-                    <PathFigure StartPoint="8,2" IsClosed="False">
-                        <LineSegment Point="22,2"/>
-                    </PathFigure>
-                    <PathFigure StartPoint="15,2" IsClosed="False">
-                        <LineSegment Point="15,38"/>
-                    </PathFigure>
-                    <PathFigure StartPoint="8,38" IsClosed="False">
-                        <LineSegment Point="22,38"/>
-                    </PathFigure>
-                </PathGeometry>
-            </Path.Data>
-        </Path>
+        <!-- Text caret cursor (I-beam) with yellow sliver -->
+        <Grid x:Name="TextCursor" Visibility="Collapsed">
+            <!-- Yellow sliver background -->
+            <Rectangle Fill="#FFFF00" Width="3" Height="36" Margin="13.5,2,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            
+            <!-- I-beam outline -->
+            <Path Stroke="Black" StrokeThickness="1.5">
+                <Path.Data>
+                    <PathGeometry>
+                        <PathFigure StartPoint="8,2" IsClosed="False">
+                            <LineSegment Point="22,2"/>
+                        </PathFigure>
+                        <PathFigure StartPoint="15,2" IsClosed="False">
+                            <LineSegment Point="15,38"/>
+                        </PathFigure>
+                        <PathFigure StartPoint="8,38" IsClosed="False">
+                            <LineSegment Point="22,38"/>
+                        </PathFigure>
+                    </PathGeometry>
+                </Path.Data>
+            </Path>
+        </Grid>
         
         <!-- Hand/pointer cursor -->
         <Path x:Name="HandCursor" Fill="#FFFF00" Stroke="Black" StrokeThickness="1.5" Visibility="Collapsed">

@@ -12,7 +12,7 @@ namespace RemOSK.Views
         public event EventHandler? OnRightClick;
         public event EventHandler<bool>? OnHoldToggle;
         
-        private bool _isHolding;
+
         
         public ClickButtonsWindow()
         {
@@ -85,7 +85,7 @@ namespace RemOSK.Views
         // Hold toggle handlers
         private void HoldButton_Checked(object sender, RoutedEventArgs e)
         {
-            _isHolding = true;
+
             HoldButton.Background = System.Windows.Media.Brushes.DarkRed;
             HoldButton.Foreground = System.Windows.Media.Brushes.White;
             Console.WriteLine("[ClickButtons] Hold ON - left button down");
@@ -94,7 +94,7 @@ namespace RemOSK.Views
         
         private void HoldButton_Unchecked(object sender, RoutedEventArgs e)
         {
-            _isHolding = false;
+
             HoldButton.Background = (System.Windows.Media.SolidColorBrush)(new System.Windows.Media.BrushConverter().ConvertFrom("#444")!);
             HoldButton.Foreground = (System.Windows.Media.SolidColorBrush)(new System.Windows.Media.BrushConverter().ConvertFrom("#AAA")!);
             Console.WriteLine("[ClickButtons] Hold OFF - left button up");

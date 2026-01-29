@@ -22,7 +22,30 @@
                 <ScaleTransform x:Name="WindowScaleTransform" ScaleX="1.0" ScaleY="1.0"/>
             </Border.LayoutTransform>
             <Grid>
-                <Canvas x:Name="KeysCanvas"/>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Preview Area -->
+                <!-- Preview Area -->
+                <Border x:Name="PreviewBorder" Grid.Row="0" Margin="2" Padding="8" 
+                        Background="#FF111111" Visibility="Visible" Height="120">
+                     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                         <TextBlock x:Name="PreviewText" 
+                                    Text="Waiting for text focus..."
+                                    Foreground="#CCCCCC"
+                                    FontSize="14"
+                                    FontFamily="Consolas"
+                                    TextWrapping="Wrap"
+                                    TextAlignment="Left"
+                                    VerticalAlignment="Top"
+                                    HorizontalAlignment="Stretch"/>
+                     </ScrollViewer>
+                </Border>
+                <Rectangle x:Name="PreviewSeparator" Grid.Row="0" VerticalAlignment="Bottom" Height="1" Fill="#33FFFFFF" Visibility="Visible"/>
+
+                <Canvas x:Name="KeysCanvas" Grid.Row="1"/>
                 <!-- Exit Edit Mode Button removed - use tray icon to exit edit mode -->
             </Grid>
         </Border>
