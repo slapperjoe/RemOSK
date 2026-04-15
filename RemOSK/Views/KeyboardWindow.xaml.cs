@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Media;
+using System.Windows.Shapes;
 using RemOSK.Controls;
 using RemOSK.Models;
 using RemOSK.Services;
@@ -253,22 +256,74 @@ namespace RemOSK.Views
             }
         }
         
+        public void SetPreviewVisible(bool visible)
+        {
+            PreviewBorder.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+            PreviewSeparator.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+            UpdateWindowSize();
+        }
+
         public void UpdatePreviewText(RemOSK.Services.TextContextService.TextContext? context)
         {
             if (context != null)
             {
-                // Insert cursor marker at the cursor position
-                string displayText = context.Text;
-                if (context.CursorPosition >= 0 && context.CursorPosition <= displayText.Length)
+                // Normalize line endings so \r alone or \r\n both render as proper newlines
+                string displayText = context.Text
+                    .Replace("\r\n", "\n")
+                    .Replace("\r", "\n");
+
+                // Determine safe cursor insertion point, avoiding the middle of a
+                // UTF-16 surrogate pair (e.g. emoji).
+                int cursorPos = context.CursorPosition;
+                bool hasCursor = cursorPos >= 0 && cursorPos <= displayText.Length;
+                if (hasCursor && cursorPos > 0)
                 {
-                    // Insert a visual cursor indicator (yellow pipe character)
-                    displayText = displayText.Insert(context.CursorPosition, "█");
+                    bool precedingIsHighSurrogate = char.IsHighSurrogate(displayText[cursorPos - 1]);
+                    bool currentIsLowSurrogate = cursorPos < displayText.Length
+                                                 && char.IsLowSurrogate(displayText[cursorPos]);
+                    if (precedingIsHighSurrogate && (currentIsLowSurrogate || cursorPos == displayText.Length))
+                    {
+                        cursorPos--;
+                    }
                 }
-                PreviewText.Text = displayText;
+
+                // Build Inlines: [text before cursor] + [thin cursor line] + [text after cursor]
+                // Using InlineUIContainer with a narrow Rectangle so the cursor overlays the text
+                // without shifting it (the Rectangle is ~2px wide).
+                PreviewText.Inlines.Clear();
+
+                if (hasCursor)
+                {
+                    string before = displayText.Substring(0, cursorPos);
+                    string after  = displayText.Substring(cursorPos);
+
+                    if (before.Length > 0)
+                        PreviewText.Inlines.Add(new Run(before));
+
+                    // Thin cursor bar: 2px wide, full line-height tall, negative right margin so it
+                    // takes up zero layout width and doesn't push following text.
+                    var cursorRect = new Rectangle
+                    {
+                        Width = 2,
+                        Height = PreviewText.FontSize * PreviewText.FontFamily.LineSpacing,
+                        Fill = new SolidColorBrush(Color.FromRgb(255, 255, 100)), // soft yellow
+                        VerticalAlignment = VerticalAlignment.Top,
+                        Margin = new Thickness(0, 0, -2, 0) // pull right text back by cursor width
+                    };
+                    PreviewText.Inlines.Add(new InlineUIContainer(cursorRect));
+
+                    if (after.Length > 0)
+                        PreviewText.Inlines.Add(new Run(after));
+                }
+                else
+                {
+                    PreviewText.Inlines.Add(new Run(displayText));
+                }
             }
             else
             {
-                PreviewText.Text = "Waiting for text focus...";
+                PreviewText.Inlines.Clear();
+                PreviewText.Inlines.Add(new Run("Waiting for text focus..."));
             }
         }
 
