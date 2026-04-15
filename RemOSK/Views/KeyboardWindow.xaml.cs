@@ -253,16 +253,41 @@ namespace RemOSK.Views
             }
         }
         
+        public void SetPreviewVisible(bool visible)
+        {
+            PreviewBorder.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+            PreviewSeparator.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+            UpdateWindowSize();
+        }
+
         public void UpdatePreviewText(RemOSK.Services.TextContextService.TextContext? context)
         {
             if (context != null)
             {
-                // Insert cursor marker at the cursor position
-                string displayText = context.Text;
-                if (context.CursorPosition >= 0 && context.CursorPosition <= displayText.Length)
+                // Normalize line endings so \r alone or \r\n both render as proper newlines
+                string displayText = context.Text
+                    .Replace("\r\n", "\n")
+                    .Replace("\r", "\n");
+
+                // Insert cursor marker, clamping to valid string boundaries and
+                // avoiding the middle of a UTF-16 surrogate pair (e.g. emoji)
+                int cursorPos = context.CursorPosition;
+                if (cursorPos >= 0 && cursorPos <= displayText.Length)
                 {
-                    // Insert a visual cursor indicator (yellow pipe character)
-                    displayText = displayText.Insert(context.CursorPosition, "█");
+                    // Avoid inserting in the middle of a UTF-16 surrogate pair (e.g. emoji).
+                    // Step back if we're between a high surrogate and its following low surrogate,
+                    // or if the cursor is at the end of a lone high surrogate.
+                    if (cursorPos > 0)
+                    {
+                        bool precedingIsHighSurrogate = char.IsHighSurrogate(displayText[cursorPos - 1]);
+                        bool currentIsLowSurrogate = cursorPos < displayText.Length
+                                                     && char.IsLowSurrogate(displayText[cursorPos]);
+                        if (precedingIsHighSurrogate && (currentIsLowSurrogate || cursorPos == displayText.Length))
+                        {
+                            cursorPos--;
+                        }
+                    }
+                    displayText = displayText.Insert(cursorPos, "█");
                 }
                 PreviewText.Text = displayText;
             }

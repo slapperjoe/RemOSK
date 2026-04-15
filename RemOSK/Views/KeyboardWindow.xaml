@@ -36,7 +36,7 @@
                                     Text="Waiting for text focus..."
                                     Foreground="#CCCCCC"
                                     FontSize="14"
-                                    FontFamily="Consolas"
+                                    FontFamily="Consolas, Segoe UI Emoji, Segoe UI Symbol"
                                     TextWrapping="Wrap"
                                     TextAlignment="Left"
                                     VerticalAlignment="Top"

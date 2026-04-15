@@ -255,6 +255,9 @@ using RemOSK.Models;
                 ((KeyboardWindow)_rightWindow).LoadKeys(_currentLayout.RightKeys, true); // Right Aligned
                 ((KeyboardWindow)_rightWindow).OnKeyPressed += Window_OnKeyPressed;
                 
+                // Hide text preview on the right window; only the left shows it
+                ((KeyboardWindow)_rightWindow).SetPreviewVisible(false);
+                
                 // Scale Logic for Right Window
                 ((KeyboardWindow)_rightWindow).SetScale(_configService.CurrentConfig.RightUiScale);
                 
@@ -780,13 +783,10 @@ using RemOSK.Models;
                 {
                     Application.Current.Dispatcher.Invoke(() => 
                     {
+                        // Only update the left window; right window has its preview hidden
                         if (_leftWindow != null)
                         {
                             ((KeyboardWindow)_leftWindow).UpdatePreviewText(context);
-                        }
-                        if (_rightWindow != null)
-                        {
-                            ((KeyboardWindow)_rightWindow).UpdatePreviewText(context);
                         }
                     });
                 };
