@@ -160,6 +160,21 @@ namespace RemOSK.Services
                 CheckOnClick = true
             };
             contextMenu.Items.Add(rdpModeItem);
+            
+            // Portrait Mode - Full Keyboard Toggle
+            var portraitModeItem = new ToolStripMenuItem("Use Full Keyboard in Portrait", null, (s, e) =>
+            {
+                var enable = !_configService.CurrentConfig.UseNonSplitInPortrait;
+                _configService.CurrentConfig.UseNonSplitInPortrait = enable;
+                _configService.SaveConfig();
+                // Reload current layout to apply change
+                _windowManager.ReloadLayout(_configService.CurrentConfig.LastUsedLayout);
+            })
+            {
+                Checked = _configService.CurrentConfig.UseNonSplitInPortrait,
+                CheckOnClick = true
+            };
+            contextMenu.Items.Add(portraitModeItem);
 
             contextMenu.Items.Add(new ToolStripSeparator());
 

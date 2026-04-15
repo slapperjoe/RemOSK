@@ -60,6 +60,7 @@ namespace RemOSK.Services
         private const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
         private const uint KEYEVENTF_KEYUP = 0x0002;
         private const uint KEYEVENTF_SCANCODE = 0x0008;
+        private const uint KEYEVENTF_UNICODE = 0x0004;
 
         public void SendKeystroke(ushort vkCode)
         {
@@ -148,6 +149,63 @@ namespace RemOSK.Services
                 }
             };
             SendInput(1, new[] { input }, INPUT.Size);
+        }
+
+        public void SendUnicodeChar(char character)
+        {
+            var inputs = new INPUT[2];
+
+            // Key Down with Unicode flag
+            inputs[0] = new INPUT
+            {
+                type = INPUT_KEYBOARD,
+                U = new InputUnion
+                {
+                    ki = new KEYBDINPUT
+                    {
+                        wVk = 0,
+                        wScan = character,
+                        dwFlags = KEYEVENTF_UNICODE,
+                        time = 0,
+                        dwExtraInfo = UIntPtr.Zero
+                    }
+                }
+            };
+
+            // Key Up with Unicode flag
+            inputs[1] = new INPUT
+            {
+                type = INPUT_KEYBOARD,
+                U = new InputUnion
+                {
+                    ki = new KEYBDINPUT
+                    {
+                        wVk = 0,
+                        wScan = character,
+                        dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP,
+                        time = 0,
+                        dwExtraInfo = UIntPtr.Zero
+                    }
+                }
+            };
+
+            var result = SendInput((uint)inputs.Length, inputs, INPUT.Size);
+            if (result == 0)
+            {
+                Console.Error.WriteLine($"[InputInjector] SendInput (Unicode) sent 0 events. Error: {Marshal.GetLastWin32Error()}");
+            }
+            else
+            {
+                Console.Error.WriteLine($"[InputInjector] Sent Unicode Char: {character} (U+{(int)character:X4})");
+            }
+        }
+
+        public void SendUnicodeString(string text)
+        {
+            foreach (char c in text)
+            {
+                SendUnicodeChar(c);
+            }
         }
 
         private const uint MOUSEEVENTF_MOVE = 0x0001;

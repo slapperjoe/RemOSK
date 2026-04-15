@@ -92,13 +92,30 @@ using RemOSK.Models;
              // Map layout name to file
              string fileName = "DefaultLayout.json"; // Fallback to TKL
              
-             if (layoutName == "75%") fileName = "Layout75.json";
-             else if (layoutName == "60%") fileName = "Layout60.json";
-             else if (layoutName.StartsWith("Alice")) fileName = "AliceLayout.json";
-             else fileName = "DefaultLayout.json";
+             // Check if we should use full (non-split) layout in portrait mode
+             bool useFullInPortrait = _configService.CurrentConfig.UseNonSplitInPortrait;
+             bool isPortrait = ScreenOrientationHelper.IsPortrait();
+             
+             if (useFullInPortrait && isPortrait)
+             {
+                 // Use full layouts in portrait mode
+                 if (layoutName == "75%") fileName = "FullLayout75.json";
+                 else if (layoutName == "60%") fileName = "FullLayout60.json";
+                 else fileName = "FullLayoutTKL.json"; // TKL and Alice use full TKL in portrait
+             }
+             else
+             {
+                 // Use split layouts (normal behavior)
+                 if (layoutName == "75%") fileName = "Layout75.json";
+                 else if (layoutName == "60%") fileName = "Layout60.json";
+                 else if (layoutName.StartsWith("Alice")) fileName = "AliceLayout.json";
+                 else fileName = "DefaultLayout.json";
+             }
             
             var layoutPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", fileName);
             _currentLayout = _layoutLoader.LoadLayout(layoutPath);
+
+            Console.WriteLine($"[Layout] Loaded {fileName} (Portrait: {isPortrait}, UseFull: {useFullInPortrait})");
 
             // If windows are open, refresh them
             if (_isVisible)
@@ -489,8 +506,8 @@ using RemOSK.Models;
                 left.BeginAnimation(Window.LeftProperty, leftAnim);
             }
 
-            // Animate Right Window
-            if (_rightWindow != null)
+            // Animate Right Window (only if RightKeys exist in layout)
+            if (_rightWindow != null && _currentLayout.RightKeys != null && _currentLayout.RightKeys.Count > 0)
             {
                 var right = _rightWindow;
                 double targetRight = SystemParameters.PrimaryScreenWidth - right.Width;
@@ -516,6 +533,10 @@ using RemOSK.Models;
                     right.BeginAnimation(Window.LeftProperty, null);
                 };
                 right.BeginAnimation(Window.LeftProperty, rightAnim);
+            }
+            else
+            {
+                Console.WriteLine("[Layout] No right keys in layout - hiding right window (non-split mode)");
             }
 
             _isVisible = true;

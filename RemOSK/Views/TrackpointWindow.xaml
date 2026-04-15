@@ -22,7 +22,7 @@
         ShowActivated="False">
     <Grid>
         <!-- Circular trackpoint window -->
-        <Border x:Name="MainBorder" Background="#CC000000" CornerRadius="50" BorderBrush="#55FFFFFF" BorderThickness="2"
+        <Border x:Name="MainBorder" Background="#33000000" CornerRadius="50" BorderBrush="#55FFFFFF" BorderThickness="2"
                 IsManipulationEnabled="False">
             <Border.LayoutTransform>
                 <ScaleTransform x:Name="WindowScaleTransform" ScaleX="1.0" ScaleY="1.0"/>

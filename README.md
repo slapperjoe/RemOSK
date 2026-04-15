@@ -24,28 +24,40 @@ Unlike standard on-screen keyboards, RemOSK uses low-level input injection to en
 
 ## Getting Started
 
-### Prerequisites
+### Installation (End Users)
+
+**Download the installer:**
+- Download `RemOSK-Setup.exe` from the [Releases](https://github.com/yourusername/RemOSK/releases) page
+- Run the installer and follow the prompts
+- Optional: Check "Start RemOSK with Windows" on the final screen for automatic startup
+
+### Building from Source
+
+**Prerequisites:**
 - Windows 10 or Windows 11
 - .NET 10.0 SDK (preview) or later
+- NSIS (optional, for creating installers)
 
-### Installation / Building
+**Build & Run:**
 
 1. Clone the repository:
    ```bash
    git clone https://github.com/yourusername/RemOSK.git
-   ```
-2. Navigate to the project directory:
-   ```bash
    cd RemOSK
    ```
-3. Build the project:
+
+2. Build and run:
    ```bash
    dotnet build
-   ```
-4. Run:
-   ```bash
    dotnet run --project RemOSK
    ```
+
+**Create Installer:**
+```powershell
+.\build-installer.ps1
+```
+
+See [INSTALLER.md](INSTALLER.md) for detailed installer build instructions.
 
 ## Usage
 

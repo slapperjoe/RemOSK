@@ -61,3 +61,5 @@ bld/
 
 # Temporary build logs from AI sessions
 build_debug_*.txt
+installer.nsi
+RemOSK-Setup.exe

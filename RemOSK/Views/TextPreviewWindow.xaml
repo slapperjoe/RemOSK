@@ -8,7 +8,7 @@
         WindowStyle="None"
         ResizeMode="NoResize"
         AllowsTransparency="True"
-        Background="#CC000000"
+        Background="#33000000"
         ShowInTaskbar="False"
         Topmost="True"
         IsHitTestVisible="False">

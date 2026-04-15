@@ -30,6 +30,7 @@ namespace RemOSK.Services
         
         public bool IsEditModeEnabled { get; set; } = false; // "Config Item for Size and Scale"
         public bool IsRdpMode { get; set; } = false; // RDP mode - mouse clicks disabled as they don't work over RDP
+        public bool UseNonSplitInPortrait { get; set; } = false; // Use full keyboard layout when in portrait orientation
     }
 
     public class ConfigService
