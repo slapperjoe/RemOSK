@@ -24,6 +24,10 @@ namespace RemOSK.Views
         public event EventHandler? RequestExitEditMode;
         public event EventHandler? RequestEnterEditMode;
         
+        // Edge-pinning properties for split keyboard
+        public bool IsEdgePinned { get; set; } = false;
+        public EdgePinMode PinMode { get; set; } = EdgePinMode.None;
+        
         // Touch tracking
         private Dictionary<int, System.Windows.Point> _activeTouches = new Dictionary<int, System.Windows.Point>();
         
@@ -181,6 +185,28 @@ namespace RemOSK.Views
                 double newLeft = _initialWindowLeft + offsetX;
                 double newTop = _initialWindowTop + offsetY;
                 
+                // Apply edge-pinning constraints for split keyboard
+                if (IsEdgePinned)
+                {
+                    // Only allow vertical movement
+                    newTop = _initialWindowTop + offsetY;
+                    
+                    // Pin to appropriate edge
+                    if (PinMode == EdgePinMode.Left)
+                    {
+                        newLeft = 0; // Pin left edge to screen left
+                    }
+                    else if (PinMode == EdgePinMode.Right)
+                    {
+                        newLeft = SystemParameters.PrimaryScreenWidth - this.ActualWidth; // Pin right edge to screen right
+                    }
+                    else
+                    {
+                        // No pinning, use original value
+                        newLeft = _initialWindowLeft + offsetX;
+                    }
+                }
+                
                 this.Left = newLeft;
                 this.Top = newTop;
                 HorizontalPositionChanged?.Invoke(this, this.Left);
@@ -265,5 +291,32 @@ namespace RemOSK.Views
         {
             RequestExitEditMode?.Invoke(this, EventArgs.Empty);
         }
+        
+        /// <summary>
+        /// Pins the window to the specified edge after scaling or position changes.
+        /// </summary>
+        public void ApplyEdgePin()
+        {
+            if (!IsEdgePinned) return;
+            
+            if (PinMode == EdgePinMode.Left)
+            {
+                this.Left = 0;
+            }
+            else if (PinMode == EdgePinMode.Right)
+            {
+                this.Left = SystemParameters.PrimaryScreenWidth - this.ActualWidth;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Defines which edge a window should be pinned to.
+    /// </summary>
+    public enum EdgePinMode
+    {
+        None,
+        Left,
+        Right
     }
 }

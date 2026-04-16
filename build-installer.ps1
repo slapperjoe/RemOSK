@@ -1,7 +1,19 @@
 # RemOSK Installer Build Script
 # This script builds the application in Release mode and creates the NSIS installer
+#
+# Parameters:
+#   -Version: Version number to embed in installer (default: 1.0.0)
+#
+# Examples:
+#   .\build-installer.ps1                    # Uses default version 1.0.0
+#   .\build-installer.ps1 -Version "1.2.3"  # Uses specified version
+
+param(
+    [string]$Version = "1.0.0"
+)
 
 Write-Host "=== RemOSK Installer Builder ===" -ForegroundColor Cyan
+Write-Host "Version: $Version" -ForegroundColor Green
 Write-Host ""
 
 # Step 1: Check if NSIS is installed
@@ -80,7 +92,20 @@ if ($missingFiles.Count -gt 0) {
 Write-Host "All required files present." -ForegroundColor Green
 Write-Host ""
 
-# Step 5: Create the installer
+# Step 5: Update version in installer.nsi
+Write-Host "Updating installer version to $Version..." -ForegroundColor Yellow
+
+# Backup original installer.nsi
+$originalNsi = Get-Content "installer.nsi" -Raw
+
+$nsiContent = $originalNsi
+$nsiContent = $nsiContent -replace '!define PRODUCT_VERSION "[^"]+"', "!define PRODUCT_VERSION `"$Version`""
+$nsiContent = $nsiContent -replace 'OutFile "[^"]+"', "OutFile `"RemOSK-Setup-$Version.exe`""
+Set-Content "installer.nsi" -Value $nsiContent -NoNewline
+Write-Host "Version updated in installer.nsi" -ForegroundColor Green
+Write-Host ""
+
+# Step 6: Create the installer
 Write-Host "Creating NSIS installer..." -ForegroundColor Yellow
 $installerOutput = & $nsisPath installer.nsi 2>&1
 $installerExitCode = $LASTEXITCODE
@@ -88,17 +113,25 @@ $installerExitCode = $LASTEXITCODE
 if ($installerExitCode -ne 0) {
     Write-Host "ERROR: Installer creation failed!" -ForegroundColor Red
     Write-Host $installerOutput
+    
+    # Restore original installer.nsi
+    Set-Content "installer.nsi" -Value $originalNsi -NoNewline
     exit 1
 }
+
+# Step 7: Restore original installer.nsi
+Write-Host "Restoring original installer.nsi..." -ForegroundColor Yellow
+Set-Content "installer.nsi" -Value $originalNsi -NoNewline
 
 Write-Host ""
 Write-Host "=== Build Complete ===" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "Installer created: RemOSK-Setup.exe" -ForegroundColor Green
+Write-Host "Installer created: RemOSK-Setup-$Version.exe" -ForegroundColor Green
 Write-Host ""
 
 # Display file size
-if (Test-Path "RemOSK-Setup.exe") {
-    $fileSize = (Get-Item "RemOSK-Setup.exe").Length / 1MB
+$installerPath = "RemOSK-Setup-$Version.exe"
+if (Test-Path $installerPath) {
+    $fileSize = (Get-Item $installerPath).Length / 1MB
     Write-Host ("Installer size: {0:N2} MB" -f $fileSize) -ForegroundColor Cyan
 }

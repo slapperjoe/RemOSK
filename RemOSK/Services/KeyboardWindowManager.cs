@@ -30,6 +30,9 @@ using RemOSK.Models;
         // Focus tracking - continuously track last "user" window (not tray/system)
         private IntPtr _lastUserForegroundWindow = IntPtr.Zero;
         private DispatcherTimer? _focusTrackingTimer;
+        
+        // Synchronized scaling flag to prevent infinite loops
+        private bool _isSyncingScale = false;
 
         public KeyboardWindowManager(ConfigService configService)
         {
@@ -206,6 +209,10 @@ using RemOSK.Models;
                 ((KeyboardWindow)_leftWindow).LoadKeys(_currentLayout.LeftKeys);
                 ((KeyboardWindow)_leftWindow).OnKeyPressed += Window_OnKeyPressed;
                 
+                // Enable edge pinning for left window
+                ((DraggableWindow)_leftWindow).IsEdgePinned = true;
+                ((DraggableWindow)_leftWindow).PinMode = EdgePinMode.Left;
+                
                 // Scale Logic for Left Window
                 ((KeyboardWindow)_leftWindow).SetScale(_configService.CurrentConfig.LeftUiScale);
                 
@@ -227,6 +234,12 @@ using RemOSK.Models;
                 {
                     _configService.CurrentConfig.LeftUiScale = scale;
                     _configService.SaveConfig();
+                    
+                    // Synchronize right window scale when in edit mode
+                    if (_configService.CurrentConfig.IsEditModeEnabled && !_isSyncingScale)
+                    {
+                        SynchronizeScale(scale, isFromLeft: true);
+                    }
                 };
 
                 _modifierManager.StateChanged += (s, e) => ((KeyboardWindow)_leftWindow).OnModifierStateChanged(_modifierManager);
@@ -275,6 +288,10 @@ using RemOSK.Models;
                 // Hide text preview on the right window; only the left shows it
                 ((KeyboardWindow)_rightWindow).SetPreviewVisible(false);
                 
+                // Enable edge pinning for right window
+                ((DraggableWindow)_rightWindow).IsEdgePinned = true;
+                ((DraggableWindow)_rightWindow).PinMode = EdgePinMode.Right;
+                
                 // Scale Logic for Right Window
                 ((KeyboardWindow)_rightWindow).SetScale(_configService.CurrentConfig.RightUiScale);
                 
@@ -296,6 +313,12 @@ using RemOSK.Models;
                 {
                      _configService.CurrentConfig.RightUiScale = scale;
                      _configService.SaveConfig();
+                     
+                     // Synchronize left window scale when in edit mode
+                     if (_configService.CurrentConfig.IsEditModeEnabled && !_isSyncingScale)
+                     {
+                         SynchronizeScale(scale, isFromLeft: false);
+                     }
                 };
 
                 _modifierManager.StateChanged += (s, e) => ((KeyboardWindow)_rightWindow!).OnModifierStateChanged(_modifierManager);
@@ -492,8 +515,10 @@ using RemOSK.Models;
             if (_leftWindow != null)
             {
                 var left = _leftWindow;
-                double targetLeft = 0;
-                if (_configService.CurrentConfig.LeftWindowLeft != -1) targetLeft = _configService.CurrentConfig.LeftWindowLeft;
+                // Always pin to left edge (0) when edge-pinned
+                bool isEdgePinned = left is DraggableWindow dw && dw.IsEdgePinned;
+                double targetLeft = isEdgePinned ? 0 : 
+                    (_configService.CurrentConfig.LeftWindowLeft != -1 ? _configService.CurrentConfig.LeftWindowLeft : 0);
                 
                 left.Left = -left.Width; // Start off-screen
                 left.Show();
@@ -510,8 +535,11 @@ using RemOSK.Models;
             if (_rightWindow != null && _currentLayout.RightKeys != null && _currentLayout.RightKeys.Count > 0)
             {
                 var right = _rightWindow;
-                double targetRight = SystemParameters.PrimaryScreenWidth - right.Width;
-                if (_configService.CurrentConfig.RightWindowLeft != -1) targetRight = _configService.CurrentConfig.RightWindowLeft;
+                // Always pin to right edge when edge-pinned
+                bool isEdgePinned = right is DraggableWindow dw && dw.IsEdgePinned;
+                double targetRight = isEdgePinned ? 
+                    SystemParameters.PrimaryScreenWidth - right.Width :
+                    (_configService.CurrentConfig.RightWindowLeft != -1 ? _configService.CurrentConfig.RightWindowLeft : SystemParameters.PrimaryScreenWidth - right.Width);
 
                 // Ensure right window is fully on-screen (move left if extending off-screen)
                 if (targetRight + right.Width > SystemParameters.PrimaryScreenWidth)
@@ -927,6 +955,37 @@ using RemOSK.Models;
             
             _leftWindow?.Dispatcher.Invoke(() => _leftWindow.Opacity = opacity);
             _rightWindow?.Dispatcher.Invoke(() => _rightWindow.Opacity = opacity);
+        }
+        
+        /// <summary>
+        /// Synchronizes scaling between left and right keyboard windows when in edit mode.
+        /// Prevents infinite loops using _isSyncingScale flag.
+        /// </summary>
+        private void SynchronizeScale(double scale, bool isFromLeft)
+        {
+            if (_isSyncingScale) return;
+            
+            try
+            {
+                _isSyncingScale = true;
+                
+                if (isFromLeft && _rightWindow is KeyboardWindow rightWindow)
+                {
+                    Console.WriteLine($"[Manager] Syncing scale from Left to Right: {scale:F2}");
+                    rightWindow.SetScale(scale);
+                    // Edge pinning is already applied in KeyboardWindow.SetScale via ApplyEdgePin()
+                }
+                else if (!isFromLeft && _leftWindow is KeyboardWindow leftWindow)
+                {
+                    Console.WriteLine($"[Manager] Syncing scale from Right to Left: {scale:F2}");
+                    leftWindow.SetScale(scale);
+                    // Edge pinning is already applied in KeyboardWindow.SetScale via ApplyEdgePin()
+                }
+            }
+            finally
+            {
+                _isSyncingScale = false;
+            }
         }
     }
 }

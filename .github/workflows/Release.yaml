@@ -95,6 +95,19 @@ jobs:
         run: dotnet restore RemOSK/RemOSK.csproj
         shell: pwsh
 
+      - name: Update project version
+        run: |
+          Write-Host "=== Updating Project Version ===" -ForegroundColor Cyan
+          $version = "${{ steps.next_version.outputs.version }}"
+          $csprojPath = "RemOSK/RemOSK.csproj"
+          $content = Get-Content $csprojPath -Raw
+          $content = $content -replace '<Version>[^<]*</Version>', "<Version>$version</Version>"
+          $content = $content -replace '<AssemblyVersion>[^<]*</AssemblyVersion>', "<AssemblyVersion>$version.0</AssemblyVersion>"
+          $content = $content -replace '<FileVersion>[^<]*</FileVersion>', "<FileVersion>$version.0</FileVersion>"
+          Set-Content $csprojPath -Value $content -NoNewline
+          Write-Host "Updated project version to $version" -ForegroundColor Green
+        shell: pwsh
+
       - name: Build Release
         run: |
           Write-Host "=== Building RemOSK in Release Mode ===" -ForegroundColor Cyan
@@ -104,14 +117,14 @@ jobs:
       - name: Build Installer
         run: |
           Write-Host "=== Creating NSIS Installer ===" -ForegroundColor Cyan
-          .\build-installer.ps1
+          .\build-installer.ps1 -Version "${{ steps.next_version.outputs.version }}"
         shell: pwsh
 
       - name: Upload Installer Artifact
         uses: actions/upload-artifact@v4
         with:
           name: RemOSK-Installer-${{ steps.next_version.outputs.version }}
-          path: RemOSK-Setup.exe
+          path: RemOSK-Setup-${{ steps.next_version.outputs.version }}.exe
           retention-days: 90
 
       - name: Create and Push Tag
@@ -129,6 +142,6 @@ jobs:
           draft: true
           generate_release_notes: true
           name: RemOSK ${{ steps.next_version.outputs.version }}
-          files: RemOSK-Setup.exe
+          files: RemOSK-Setup-${{ steps.next_version.outputs.version }}.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

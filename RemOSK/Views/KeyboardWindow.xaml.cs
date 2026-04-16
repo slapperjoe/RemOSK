@@ -40,6 +40,9 @@ namespace RemOSK.Views
             
             // Re-calculate window size based on content and new scale
             UpdateWindowSize();
+            
+            // Reapply edge pinning after scaling changes window size
+            ApplyEdgePin();
         }
 
         protected override bool IsTouchOnControl(DependencyObject source)
