@@ -141,7 +141,7 @@ jobs:
           tag_name: ${{ steps.next_version.outputs.tag }}
           draft: true
           generate_release_notes: true
-          name: RemOSK ${{ steps.next_version.outputs.version }}
+          name: Release ${{ steps.next_version.outputs.version }}
           files: RemOSK-Setup-${{ steps.next_version.outputs.version }}.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
