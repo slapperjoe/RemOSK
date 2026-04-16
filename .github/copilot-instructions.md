@@ -131,9 +131,9 @@ Layouts stored in `RemOSK/Assets/*.json` (DefaultLayout, Layout75, Layout60, Ali
 - Acrylic blur effects managed by **WindowBlurHelper** (Win32 DWM API)
 
 ### Modifier Key Handling
-- **ModifierStateManager** implements IModifierObserver pattern
-- Tracks Shift/Ctrl/Alt/Win state across all keyboard halves
-- Observers notified on press/release for UI updates (key highlighting)
+- **ModifierStateManager** tracks Shift/Ctrl/Alt/Win sticky-key state; keyboard windows implement `IModifierObserver` to receive `OnModifierStateChanged()` callbacks for UI updates (key highlighting)
+- Shift: single tap = latch, double-tap within 500ms = caps-lock style lock, third tap = release
+- Other modifiers (Ctrl/Alt/Win) toggle on/off; all auto-release after the next non-modifier key
 
 ### Focus Management
 - **KeyboardWindowManager** uses 100ms timer to poll foreground window

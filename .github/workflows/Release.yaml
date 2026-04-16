@@ -1,0 +1,124 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0) - leave empty for auto-increment'
+        required: false
+        type: string
+      release_type:
+        description: 'Release type'
+        required: true
+        type: choice
+        default: 'patch'
+        options:
+          - major
+          - minor
+          - patch
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          $latestTag = git describe --tags --abbrev=0 2>$null
+          if (-not $latestTag) {
+            $latestTag = "v0.0.0"
+          }
+          Write-Host "Latest tag: $latestTag"
+          echo "latest_tag=$latestTag" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
+      - name: Calculate next version
+        id: next_version
+        run: |
+          $latestTag = "${{ steps.get_latest_tag.outputs.latest_tag }}"
+          $version = $latestTag -replace '^v', ''
+          $parts = $version -split '\.'
+          $major = [int]$parts[0]
+          $minor = [int]$parts[1]
+          $patch = [int]$parts[2]
+          
+          # Manual version override
+          if ("${{ github.event.inputs.version }}" -ne "") {
+            $newVersion = "${{ github.event.inputs.version }}"
+          } else {
+            # Auto-increment based on release type
+            $releaseType = "${{ github.event.inputs.release_type }}"
+            if ($releaseType -eq "" -or $releaseType -eq "patch") {
+              $patch++
+            } elseif ($releaseType -eq "minor") {
+              $minor++
+              $patch = 0
+            } elseif ($releaseType -eq "major") {
+              $major++
+              $minor = 0
+              $patch = 0
+            }
+            $newVersion = "$major.$minor.$patch"
+          }
+          
+          Write-Host "New version: v$newVersion"
+          echo "version=$newVersion" >> $env:GITHUB_OUTPUT
+          echo "tag=v$newVersion" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install NSIS
+        run: |
+          choco install nsis -y
+        shell: pwsh
+
+      - name: Build Release
+        run: |
+          Write-Host "=== Building RemOSK in Release Mode ===" -ForegroundColor Cyan
+          dotnet build RemOSK/RemOSK.csproj -c Release --no-restore
+        shell: pwsh
+
+      - name: Build Installer
+        run: |
+          Write-Host "=== Creating NSIS Installer ===" -ForegroundColor Cyan
+          .\build-installer.ps1
+        shell: pwsh
+
+      - name: Upload Installer Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RemOSK-Installer-${{ steps.next_version.outputs.version }}
+          path: RemOSK-Setup.exe
+          retention-days: 90
+
+      - name: Create and Push Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.next_version.outputs.tag }}" -m "Release ${{ steps.next_version.outputs.tag }}"
+          git push origin "${{ steps.next_version.outputs.tag }}"
+        shell: pwsh
+
+      - name: Create Release Draft
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.next_version.outputs.tag }}
+          draft: true
+          generate_release_notes: true
+          name: RemOSK ${{ steps.next_version.outputs.version }}
+          files: RemOSK-Setup.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
