@@ -91,6 +91,10 @@ jobs:
           choco install nsis -y
         shell: pwsh
 
+      - name: Restore dependencies
+        run: dotnet restore RemOSK/RemOSK.csproj
+        shell: pwsh
+
       - name: Build Release
         run: |
           Write-Host "=== Building RemOSK in Release Mode ===" -ForegroundColor Cyan
