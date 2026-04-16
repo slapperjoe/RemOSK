@@ -37,6 +37,7 @@ jobs:
           if (-not $latestTag) {
             $latestTag = "v0.0.0"
           }
+          $global:LASTEXITCODE = 0
           Write-Host "Latest tag: $latestTag"
           echo "latest_tag=$latestTag" >> $env:GITHUB_OUTPUT
         shell: pwsh
