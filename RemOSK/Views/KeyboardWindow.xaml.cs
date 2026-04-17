@@ -127,13 +127,19 @@ namespace RemOSK.Views
              if (double.IsNaN(oldWidth)) oldWidth = this.ActualWidth; // Fallback
 
              double newWidth = (_unscaledWidth + 10) * _currentScale + 20;
-             double newHeight = (_unscaledHeight + 10) * _currentScale + 20;
              
-             // Measure preview with constrained width
-             // It has fixed height in XAML (64) + padding (4) + margin (4) approx
-             // We can just rely on DesiredSize
-             PreviewBorder.Measure(new Size(newWidth - 20, double.PositiveInfinity));
-             newHeight += PreviewBorder.DesiredSize.Height + 5; // +5 for margin/separator
+             // Get the UNSCALED preview height (the fixed height in XAML)
+             // PreviewBorder height is 120 + margins (2 top + 2 bottom) + separator (1) = ~125
+             double unscaledPreviewHeight = 125; // Height="120" in XAML + 2+2 margin + 1 separator
+             
+             // Only include preview height if preview is visible
+             double previewHeightToAdd = (PreviewBorder.Visibility == Visibility.Visible) ? unscaledPreviewHeight : 0;
+             
+             // Calculate total unscaled content height (keys + preview if visible)
+             double totalUnscaledHeight = _unscaledHeight + previewHeightToAdd + 10;
+             
+             // Apply scale to the entire content (both preview and keys are scaled together)
+             double newHeight = totalUnscaledHeight * _currentScale + 20;
 
              // If Right Aligned, we must adjust Left to keep the Right Edge fixed
              if (_isRightAligned)
