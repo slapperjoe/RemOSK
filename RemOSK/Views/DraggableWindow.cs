@@ -292,6 +292,11 @@ namespace RemOSK.Views
             RequestExitEditMode?.Invoke(this, EventArgs.Empty);
         }
         
+        protected void RaiseRequestEnterEditMode()
+        {
+            RequestEnterEditMode?.Invoke(this, EventArgs.Empty);
+        }
+        
         /// <summary>
         /// Pins the window to the specified edge after scaling or position changes.
         /// </summary>

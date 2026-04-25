@@ -215,6 +215,7 @@ namespace RemOSK.Services
         private const uint MOUSEEVENTF_RIGHTUP = 0x0010;
         private const uint MOUSEEVENTF_MIDDLEDOWN = 0x0020;
         private const uint MOUSEEVENTF_MIDDLEUP = 0x0040;
+        private const uint MOUSEEVENTF_WHEEL = 0x0800;
 
         [DllImport("user32.dll")]
         private static extern int ShowCursor(bool bShow);
@@ -424,6 +425,28 @@ namespace RemOSK.Services
             var inputs = new INPUT[1];
             inputs[0] = new INPUT { type = INPUT_MOUSE, U = new InputUnion { mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_LEFTUP } } };
             SendInput(1, inputs, INPUT.Size);
+        }
+
+        /// <summary>
+        /// Sends a vertical mouse wheel event.
+        /// Positive delta = scroll up (toward user). Negative delta = scroll down.
+        /// Use multiples of 120 (WHEEL_DELTA) for one notch at a time.
+        /// </summary>
+        public void SendMouseScroll(int delta)
+        {
+            var input = new INPUT
+            {
+                type = INPUT_MOUSE,
+                U = new InputUnion
+                {
+                    mi = new MOUSEINPUT
+                    {
+                        mouseData = (uint)delta,
+                        dwFlags = MOUSEEVENTF_WHEEL
+                    }
+                }
+            };
+            SendInput(1, new[] { input }, INPUT.Size);
         }
     }
 }

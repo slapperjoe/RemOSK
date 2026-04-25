@@ -72,7 +72,8 @@ using RemOSK.Models;
             // Don't skip VS Code just because it has "RemOSK" in the path!
             bool isOurWindow = title == "RemOSK Keyboard" || 
                                title == "RemOSK Trackpoint" || 
-                               title == "RemOSK Clicks";
+                               title == "RemOSK Clicks" ||
+                               title == "RemOSK Scroll";
             if (isOurWindow || title == "(unknown)" || string.IsNullOrEmpty(title))
             {
                 return;
@@ -445,6 +446,66 @@ using RemOSK.Models;
                 _clickButtonsWindow.Show();
             }
             
+            // Show Scroll Wheel Window when mouse mode is enabled
+            if (_configService.CurrentConfig.MouseMode != "Off")
+            {
+                if (_scrollWheelWindow == null)
+                {
+                    _scrollWheelWindow = new ScrollWheelWindow();
+
+                    // Use saved position or default (right of click buttons)
+                    if (_configService.CurrentConfig.ScrollWheelWindowLeft != -1)
+                        _scrollWheelWindow.Left = _configService.CurrentConfig.ScrollWheelWindowLeft;
+                    else
+                        _scrollWheelWindow.Left = (SystemParameters.PrimaryScreenWidth / 2) + 120;
+
+                    if (_configService.CurrentConfig.ScrollWheelWindowTop != -1)
+                        _scrollWheelWindow.Top = _configService.CurrentConfig.ScrollWheelWindowTop;
+                    else
+                        _scrollWheelWindow.Top = (SystemParameters.PrimaryScreenHeight / 2) + 50;
+
+                    // Apply saved scale
+                    _scrollWheelWindow.SetScale(_configService.CurrentConfig.ScrollWheelUiScale);
+                    _scrollWheelWindow.ScaleChanged += (s, scale) =>
+                    {
+                        _configService.CurrentConfig.ScrollWheelUiScale = scale;
+                        _configService.SaveConfig();
+                    };
+
+                    _scrollWheelWindow.OnInteractionStart += (s, e) => RegisterActivity();
+
+                    _scrollWheelWindow.OnScroll += (s, ticks) =>
+                    {
+                        RegisterActivity();
+                        SetClickThrough(true);
+                        try { _inputInjector.SendMouseScroll(ticks * 120); }
+                        finally { SetClickThrough(false); }
+                    };
+
+                    // Position persistence
+                    _scrollWheelWindow.HorizontalPositionChanged += (s, left) =>
+                    {
+                        _configService.CurrentConfig.ScrollWheelWindowLeft = left;
+                        _configService.SaveConfig();
+                    };
+                    _scrollWheelWindow.VerticalPositionChanged += (s, top) =>
+                    {
+                        _configService.CurrentConfig.ScrollWheelWindowTop = top;
+                        _configService.SaveConfig();
+                    };
+
+                    // Long-press to enter edit mode
+                    _scrollWheelWindow.RequestEnterEditMode += (s, e) =>
+                    {
+                        Console.WriteLine("[Manager] Long-press on ScrollWheel - entering edit mode");
+                        _configService.CurrentConfig.IsEditModeEnabled = true;
+                        _configService.SaveConfig();
+                        UpdateEditMode();
+                    };
+                }
+                _scrollWheelWindow.Show();
+            }
+            
             // Apply Acrylic State
             UpdateAcrylicState();
             
@@ -579,6 +640,7 @@ using RemOSK.Models;
             
             if (_trackpointWindow != null) ((TrackpointWindow)_trackpointWindow!).SetEditMode(enabled);
             _clickButtonsWindow?.SetEditMode(enabled);
+            _scrollWheelWindow?.SetEditMode(enabled);
 
             // Disable inactivity timer in Edit Mode
             if (enabled)
@@ -626,6 +688,7 @@ using RemOSK.Models;
         private Window? _trackpointWindow;
         private CursorOverlay? _cursorOverlay;
         private ClickButtonsWindow? _clickButtonsWindow;
+        private ScrollWheelWindow? _scrollWheelWindow;
 
         public void UpdateMouseMode()
         {
@@ -736,6 +799,7 @@ using RemOSK.Models;
             _trackpointWindow?.Hide();
             _cursorOverlay?.DisableOverlay();
             _clickButtonsWindow?.Hide();
+            _scrollWheelWindow?.Hide();
             _textPreviewController?.Stop();
 
             _isVisible = false;
@@ -750,13 +814,14 @@ using RemOSK.Models;
             _rightWindow?.Close();
             _trackpointWindow?.Close();
             _clickButtonsWindow?.Close();
-            _clickButtonsWindow?.Close();
+            _scrollWheelWindow?.Close();
             _textPreviewController?.Dispose();
             
             _leftWindow = null;
             _rightWindow = null;
             _trackpointWindow = null;
             _clickButtonsWindow = null;
+            _scrollWheelWindow = null;
             _textPreviewController = null;
         }
 
@@ -912,6 +977,7 @@ using RemOSK.Models;
             _rightWindow?.Dispatcher.Invoke(() => _rightWindow.Opacity = FADED_OPACITY);
             _trackpointWindow?.Dispatcher.Invoke(() => _trackpointWindow.Opacity = FADED_OPACITY);
             _clickButtonsWindow?.Dispatcher.Invoke(() => _clickButtonsWindow.Opacity = FADED_OPACITY);
+            _scrollWheelWindow?.Dispatcher.Invoke(() => _scrollWheelWindow.Opacity = FADED_OPACITY);
         }
         
         private void RestoreWindows()
@@ -923,6 +989,7 @@ using RemOSK.Models;
             _rightWindow?.Dispatcher.Invoke(() => _rightWindow.Opacity = NORMAL_OPACITY);
             _trackpointWindow?.Dispatcher.Invoke(() => _trackpointWindow.Opacity = NORMAL_OPACITY);
             _clickButtonsWindow?.Dispatcher.Invoke(() => _clickButtonsWindow.Opacity = NORMAL_OPACITY);
+            _scrollWheelWindow?.Dispatcher.Invoke(() => _scrollWheelWindow.Opacity = NORMAL_OPACITY);
         }
         
         /// <summary>
@@ -936,6 +1003,7 @@ using RemOSK.Models;
                 (_rightWindow as KeyboardWindow)?.EnableClickThrough();
                 (_trackpointWindow as TrackpointWindow)?.EnableClickThrough();
                 (_clickButtonsWindow as ClickButtonsWindow)?.EnableClickThrough();
+                _scrollWheelWindow?.EnableClickThrough();
             }
             else
             {
@@ -943,6 +1011,7 @@ using RemOSK.Models;
                 (_rightWindow as KeyboardWindow)?.DisableClickThrough();
                 (_trackpointWindow as TrackpointWindow)?.DisableClickThrough();
                 (_clickButtonsWindow as ClickButtonsWindow)?.DisableClickThrough();
+                _scrollWheelWindow?.DisableClickThrough();
             }
         }
 

@@ -9,10 +9,21 @@
 #   .\build-installer.ps1 -Version "1.2.3"  # Uses specified version
 
 param(
-    [string]$Version = "1.0.0"
+    [string]$Version = "0.0.15"
 )
 
 Write-Host "=== RemOSK Installer Builder ===" -ForegroundColor Cyan
+
+# Auto-read version from project file if not explicitly supplied
+if ([string]::IsNullOrEmpty($Version)) {
+    $csprojPath = "RemOSK\RemOSK.csproj"
+    if (Test-Path $csprojPath) {
+        [xml]$csproj = Get-Content $csprojPath
+        $Version = $csproj.Project.PropertyGroup.Version
+    }
+    if ([string]::IsNullOrEmpty($Version)) { $Version = "1.0.0" }
+    Write-Host "Auto-detected version: $Version" -ForegroundColor Cyan
+}
 Write-Host "Version: $Version" -ForegroundColor Green
 Write-Host ""
 
@@ -113,7 +124,7 @@ $installerExitCode = $LASTEXITCODE
 if ($installerExitCode -ne 0) {
     Write-Host "ERROR: Installer creation failed!" -ForegroundColor Red
     Write-Host $installerOutput
-    
+
     # Restore original installer.nsi
     Set-Content "installer.nsi" -Value $originalNsi -NoNewline
     exit 1

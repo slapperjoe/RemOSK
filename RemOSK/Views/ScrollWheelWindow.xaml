@@ -1,0 +1,47 @@
+<local:DraggableWindow x:Class="RemOSK.Views.ScrollWheelWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:RemOSK.Views"
+        Title="RemOSK Scroll"
+        Height="140" Width="40"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        Stylus.IsPressAndHoldEnabled="False"
+        Stylus.IsFlicksEnabled="False"
+        Stylus.IsTapFeedbackEnabled="False"
+        Stylus.IsTouchFeedbackEnabled="False"
+        ShowActivated="False"
+        PreviewTouchDown="Window_PreviewTouchDown"
+        PreviewTouchMove="Window_PreviewTouchMove"
+        PreviewTouchUp="Window_PreviewTouchUp">
+    <Grid>
+        <Border x:Name="MainBorder" Background="#CC000000" CornerRadius="10" BorderBrush="#55FFFFFF" BorderThickness="2"
+                IsManipulationEnabled="False">
+            <Border.LayoutTransform>
+                <ScaleTransform x:Name="WindowScaleTransform" ScaleX="1.0" ScaleY="1.0"/>
+            </Border.LayoutTransform>
+            <Grid x:Name="ContentContainer">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="28"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="28"/>
+                </Grid.RowDefinitions>
+
+                <!-- Up arrow -->
+                <TextBlock Grid.Row="0" Text="▲" Foreground="#AAFFFFFF" FontSize="11"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                <!-- Center track groove -->
+                <Border Grid.Row="1" Width="3" CornerRadius="1" Background="#33FFFFFF" HorizontalAlignment="Center"/>
+
+                <!-- Down arrow -->
+                <TextBlock Grid.Row="2" Text="▼" Foreground="#AAFFFFFF" FontSize="11"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+    </Grid>
+</local:DraggableWindow>

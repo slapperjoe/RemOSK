@@ -27,6 +27,11 @@ namespace RemOSK.Services
         public double ClickButtonsWindowTop { get; set; } = -1;
         public double ClickButtonsWindowLeft { get; set; } = -1;
         public double ClickButtonsUiScale { get; set; } = 1.0;
+
+        // Scroll wheel window position
+        public double ScrollWheelWindowTop { get; set; } = -1;
+        public double ScrollWheelWindowLeft { get; set; } = -1;
+        public double ScrollWheelUiScale { get; set; } = 1.0;
         
         public bool IsEditModeEnabled { get; set; } = false; // "Config Item for Size and Scale"
         public bool IsRdpMode { get; set; } = false; // RDP mode - mouse clicks disabled as they don't work over RDP
